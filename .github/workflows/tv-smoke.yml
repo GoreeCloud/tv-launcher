@@ -27,6 +27,8 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - name: Test read-only APK update preflight safety
+        run: python3 -m unittest discover -s .github/scripts/tests -v
       - name: Build debug APK
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
       - name: Verify packaged TV branding and privacy

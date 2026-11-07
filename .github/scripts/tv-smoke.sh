@@ -97,6 +97,41 @@ for path, expected in zip(sys.argv[1:], [(1920, 1080), (1280, 720)]):
     assert size == expected, f'Unexpected capture size {size} for {path}'
     print('Verified emulator screenshot', path, size)
 VERIFY_PNG
+# Isolated UHD/4K layout smoke. This overrides only the disposable emulator.
+# It does NOT change the physical owner's display mode or stored settings.
+adb shell wm size 3840x2160
+adb shell wm density 320
+adb shell am force-stop com.goreecloud.tvlauncher
+adb shell am start -n com.goreecloud.tvlauncher/.MainActivity
+sleep 5
+adb shell input keyevent KEYCODE_DPAD_RIGHT
+adb shell uiautomator dump /sdcard/window-goreecloud-4k.xml
+adb pull /sdcard/window-goreecloud-4k.xml "$OUT_DIR/window-4k.xml" >/dev/null
+python3 - "$OUT_DIR/window-4k.xml" <<'FOCUS_4K'
+import sys
+import xml.etree.ElementTree as ET
+nodes = ET.parse(sys.argv[1]).getroot().findall('.//node')
+labels = [node.get('text') for node in nodes]
+assert labels.count('YOUR APPS') == 1, 'Missing or duplicated UHD Your Apps heading'
+assert 'FAVORITES' not in labels and 'QUICK LAUNCH' not in labels, (
+    'A retired Favorites/Quick Launch heading returned at UHD'
+)
+assert any(n.get('focused') == 'true' and n.get('clickable') == 'true'
+           for n in nodes), 'Actionable D-pad focus lost at UHD'
+print('PASS: 4K Your Apps identity and focused actionable control')
+FOCUS_4K
+adb exec-out screencap -p > "$OUT_DIR/home-4k.png"
+python3 - "$OUT_DIR/home-4k.png" <<'VERIFY_UHD'
+import struct
+import sys
+from pathlib import Path
+data = Path(sys.argv[1]).read_bytes()
+assert data[:8] == b'\x89PNG\r\n\x1a\n', 'Invalid UHD screenshot'
+assert struct.unpack('>II', data[16:24]) == (3840, 2160), (
+    'Wrong UHD screenshot size'
+)
+print('PASS: actual emulator screenshot is 3840 x 2160')
+VERIFY_UHD
 adb shell wm size 1920x1080
 adb shell wm density 240
 adb logcat -d -t 600 -v brief > "$OUT_DIR/logcat-tail.txt"
