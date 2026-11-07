@@ -1,6 +1,6 @@
 # GoreeCloud TV Launcher
 
-**v0.2.0-alpha.2 · Native Android TV / Google TV · Development preview**
+**v0.2.0-alpha.3 · Native Android TV / Google TV · Development preview**
 
 An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
@@ -68,7 +68,7 @@ adb -s TV_IP:DEBUGGING_PORT install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s TV_IP:DEBUGGING_PORT shell am start -n com.goreecloud.tvlauncher/.MainActivity
 ```
 
-Never expose ADB to the public Internet, disable/uninstall the original TV launcher, or force a HOME role with system package disabling. The **Choose Home** button opens the supported system role dialog where available; installing does not make it default. Debug signing certificates can differ across machines and prevent in-place updates; back up the prior build and data and assess a rollback before replacing.
+Never expose ADB to the public Internet, disable/uninstall the original TV launcher, or force a HOME role with system package disabling. The **Choose Home** button requests the system role where supported. A TV may report that this role is held while its manufacturer Home still handles the Home key. The app now checks the resolved Home activity and provides a non-destructive explanation and system Home settings option. Installing an APK or obtaining a role alone does not prove effective default routing. Debug signing certificates can differ across machines and prevent in-place updates; back up the prior build and data and assess a rollback before replacing.
 
 ## Known acceptance gaps
 
