@@ -20,8 +20,15 @@ jobs:
           java-version: '21'
       # Ubuntu GitHub runners already provide the Android SDK command-line tools.
       - name: Install Android SDK 35
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: |
+          SDKMGR=$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -1)
+          test -n "$SDKMGR"
+          "$SDKMGR" --sdk_root="$ANDROID_HOME" 'platforms;android-35' 'build-tools;35.0.0'
       - name: Test and build APK
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
       - name: Upload development APK
         uses: actions/upload-artifact@v4
