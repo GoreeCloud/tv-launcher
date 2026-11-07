@@ -166,14 +166,23 @@ public final class MainActivity extends Activity {
         renderDock();
         final View next = firstDockTile != null ? firstDockTile : findAppsButton;
         if (next == null) return;
-        next.requestFocus();
+        requestTvFocus(next);
         // Android TV can remove the previous focused tile during its layout
         // pass. Repair only a genuinely missing focus, never steal a later
         // user-selected focus from another control.
         root.postDelayed(() -> {
             if (root != null && root.hasWindowFocus() && getCurrentFocus() == null
-                && next.isAttachedToWindow()) next.requestFocus();
+                && next.isAttachedToWindow()) requestTvFocus(next);
         }, 120);
+    }
+
+    private static boolean requestTvFocus(View next) {
+        // A touch-operated search modal (or the Android emulator's input tap)
+        // leaves the view hierarchy in touch mode. Normal requestFocus()
+        // rejects TV app tiles that aren't focusableInTouchMode, even though
+        // they are D-pad focusable. Cross back to navigation mode explicitly.
+        return next.isInTouchMode() ? next.requestFocusFromTouch()
+            : next.requestFocus();
     }
 
     private SharedPreferences settings() { return getPreferences(Context.MODE_PRIVATE); }
