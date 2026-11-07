@@ -38,6 +38,6 @@ This script **never installs an APK**. It verifies an exact online ADB serial an
 - Any update needing uninstall, data deletion, role reassignment, stock Home disablement, or unreviewed certificates is blocked pending explicit authorization and a verified recovery path.
 - A passing read-only signer check is only one release gate; it is never permission to change the user's active TV session.
 
-### Emulator 4K caveat discovered November 7, 2026
+### Native 4K test limitation discovered November 7, 2026
 
-On isolated Google TV API 34 CI, `wm size 3840x2160` preserved a focusable `YOUR APPS` hierarchy but the headless emulator compositor still emitted a **1920×1080** screenshot. A test that demands native 4K pixels therefore fails despite successful 4K logical sizing; the automated script records both the requested virtual size and actual PNG dimensions. Do not promote this result to physical/native UHD screenshot, 4K visual, TalkBack, or founder acceptance.
+The hosted Google TV API 34 emulator (physical framebuffer 1920×1080) **ignored** attempts to set `wm size 3840x2160`: a readback of `wm size` still reported only `Physical size: 1920x1080` with no logical override, and the PNG screenshot was 1920×1080. The UI remained focusable, but **no 4K layout or screenshot validation occurred**. Failed [first](https://github.com/GoreeCloud/tv-launcher/actions/runs/42411097450) and [second](https://github.com/GoreeCloud/tv-launcher/actions/runs/42411529061) exploratory CI runs are preserved as evidence; the ineffective 4K test was removed from the required smoke workflow instead of inventing coverage. The standard 1080p and 720p emulator tests still run, and native/physical 4K QA remains a mandatory release gate.
