@@ -7,7 +7,27 @@ mkdir -p "$OUT_DIR"
 : "${ANDROID_HOME:?ANDROID_HOME must be set}"
 export PATH="$ANDROID_HOME/platform-tools:$PATH"
 
-timeout 360 adb wait-for-device
+# Mandatory pre-mutation guard: never mistake a USB phone or the owner's
+# wireless-ADB TV for a disposable emulator. Bound the wait to the exact
+# emulator serial, reject all other connected ADB targets, then lock every
+# following unqualified `adb` call to the verified emulator serial.
+# Refuse a real connected device immediately, even before emulator startup.
+preconnected=$(adb devices -l | awk '$2=="device" {print $1}')
+if [ -n "$preconnected" ] && [ "$preconnected" != "emulator-5554" ]; then
+  echo "BLOCK: detected a real or ambiguous ADB target before emulator startup" >&2
+  exit 2
+fi
+timeout 360 adb -s emulator-5554 wait-for-device
+connected=$(adb devices -l | awk '$2=="device" {print $1}')
+if [ "$connected" != "emulator-5554" ]; then
+  echo "BLOCK: TV smoke requires the *only* online device to be emulator-5554" >&2
+  exit 2
+fi
+if [ "$(adb -s emulator-5554 shell getprop ro.kernel.qemu | tr -d '\r')" != "1" ]; then
+  echo "BLOCK: emulator-5554 did not attest Android QEMU identity" >&2
+  exit 2
+fi
+export ANDROID_SERIAL=emulator-5554
 for attempt in $(seq 1 180); do
   booted=$(adb shell getprop sys.boot_completed | tr -d '\r')
   if [ "$booted" = "1" ]; then break; fi

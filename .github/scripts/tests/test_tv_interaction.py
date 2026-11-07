@@ -67,6 +67,19 @@ class Parsing(unittest.TestCase):
                 script.assert_disposable_emulator()
             script.adb.assert_not_called()
 
+    def test_shell_smoke_guards_device_before_first_mutation(self):
+        shell = (Path(__file__).resolve().parents[1] / "tv-smoke.sh").read_text()
+        a = shell.index("preconnected=$(adb devices")
+        b = shell.index("timeout 360 adb -s emulator-5554 wait-for-device")
+        c = shell.index("export ANDROID_SERIAL=emulator-5554")
+        first_mutation = min(shell.index("adb shell input keyevent"),
+                             shell.index("adb install -r"),
+                             shell.index("adb shell wm size"))
+        self.assertLess(a, b)
+        self.assertLess(b, c)
+        self.assertLess(c, first_mutation)
+        self.assertIn('ro.kernel.qemu', shell[:first_mutation])
+
     def test_emulator_guard_checks_kernel_flag(self):
         with patch.object(script, "adb", return_value=b"0\n"), patch.object(
                 script.os, "getenv", return_value="/sdk"), patch.object(
