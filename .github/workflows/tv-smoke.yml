@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 30
     env:
       ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -35,7 +36,12 @@ jobs:
           AVDMGR=$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/avdmanager' | sort -V | tail -1)
           test -x "$SDKMGR" && test -x "$AVDMGR"
           "$SDKMGR" --sdk_root="$ANDROID_HOME" 'emulator' 'platform-tools' 'system-images;android-34;google-tv;x86'
-          echo no | "$AVDMGR" create avd --name GoreeCloudTvTest --package 'system-images;android-34;google-tv;x86' --force
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo no | "$AVDMGR" create avd --name GoreeCloudTvTest --package 'system-images;android-34;google-tv;x86' --path "$ANDROID_AVD_HOME/GoreeCloudTvTest.avd" --force
+          echo "AVD directory: $ANDROID_AVD_HOME"
+          find "$ANDROID_AVD_HOME" -maxdepth 2 -type f -name 'config.ini' -o -name '*.ini' | head -12
+          "$ANDROID_HOME/emulator/emulator" -list-avds
+          test -f "$ANDROID_AVD_HOME/GoreeCloudTvTest.ini"
       - name: Boot emulator and smoke-test app
         run: |
           set -euo pipefail
