@@ -1,50 +1,77 @@
 # GoreeCloud TV Launcher
 
-An original, native, D-pad-first home screen for **Android TV and Google TV**, built for direct APK installation. Development preview v0.1.0.
+**v0.2.0-alpha.2 · Native Android TV / Google TV · Development preview**
 
-## Features
+An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
-- Android `HOME` intent handler and Android TV `LEANBACK_LAUNCHER` entry point.
-- Display installed TV apps and compatible launchable apps; launch with remote OK.
-- Local-only app search and pinned/favorite tiles (long-press OK to toggle).
-- Current date/time, app refresh, TV settings shortcut, and user-driven Home selection.
-- D-pad focus outlines, large cards, landscape/overscan spacing and no touch requirement.
-- Zero network permission, no telemetry, ads, usage stats, sensitive accessibility services, or device-admin access.
-- Original GC UI-inspired semantic foreground, surfaces and focus states; colors are this app's design choice, not ecosystem brand defaults.
+## Implemented home UI
 
-**Known limits:** OEM firmware may block third-party HOME selection; Google TV manufacturer launchers can impose restrictions. The app never disables a system package, suppresses OTA updates or auto-claims the Home role. Pinned apps are local and may disappear if uninstalled. TV-specific acceptance, visual QA, TalkBack testing, and long-press behavior vary by remote and remain pending until tested on an actual TV.
+- **Immersive hero:** featured first-party wallpaper, GoreeCloud TV logo, clock, original world title/description, real Explore Apps and Choose Wallpaper controls, and four selectable scene indicators.
+- **Floating translucent dock:** six large TV app tiles, readable labels, strong focus outline/scale, user-pinned favorites, responsive remote navigation, and optional quick-launch suggestions before any pinning.
+- **Continue in Your Apps:** actionable recently launched app shortcuts stored only in private on-device preferences. The empty state shows launchable app shortcuts; this is explicitly **not** a fabricated Continue Watching history or episode-progress feed.
+- **GoreeCloud Worlds:** a horizontally scrollable, D-pad-operable visual rail to select one of four bundled original wallpapers.
+- **Recommended for You:** a discoverable carousel of actual installed, non-pinned apps. The selection is deterministic and local; no behavioral personalization, sponsor payments, external recommendations or tracking.
+- **Your Apps:** complete searchable launchable app grid, TV settings link, Home role request where permitted, and localized clock.
+- Remote OK to launch, Menu or long-press OK to pin/unpin, keyboard/remote focus retention, app icon loading from installed activities, scalable cards, touch-free controls and Android TV banner registration.
 
-## Build
+### Four built-in original wallpapers
 
-Use JDK 21 and the Android SDK platform 35 with build tools 35+.
+All wallpapers are **1920×1080 WebP**, permanently packaged in the APK, selectable entirely offline:
+
+| Name | Role | Scene |
+| --- | --- | --- |
+| **Horizon Expedition** | Default | Sunset planetary expedition and future skyline |
+| **Aperture City** | Built-in | Violet celestial city with skyline |
+| **Cloudforge Peaks** | Built-in | Mountain cloudscape and floating natural islands |
+| **Neon Harbor** | Built-in | Night-lit skyline over a reflective harbor |
+
+**Wallpaper menu:** select *Choose wallpaper*, a world scene card or hero indicator. Selected wallpaper persists in private local settings. No Internet access or image-fetching service.
+
+**Optional personal image:** Android's scoped system document picker is used where implemented. On some Google TV firmwares, the OS resolves the picker to a nonfunctional stub. For *debug builds only*, an authorized trusted computer can load a file locally through wireless ADB:
 
 ```sh
-./gradlew --no-daemon testDebugUnitTest assembleDebug
+adb -s TV_IP:DEBUGGING_PORT exec-in run-as com.goreecloud.tvlauncher sh -c 'mkdir -p files && cat > files/backdrop.jpg' < /path/to/your-owned-image.jpg
 ```
 
-APK: `app/build/outputs/apk/debug/app-debug.apk`. This is a debug-signed **development** build, not a stable release.
+Then select **Use my own image** in the wallpaper chooser. This image stays in the app's private files; it does not become part of the public repository. Choose *Horizon Expedition* to restore the default. No third-party streaming artwork, copyrighted promotional images or screenshots from the provided mockup are bundled.
 
-## Wireless ADB installation
+## Official GoreeCloud TV identity
 
-On TV: **Settings → Device Preferences / System → About → Android TV OS build** (click several times to enable Developer options), then **Developer options → Wireless debugging** where supported. Use a trusted private LAN. On Android 11+ pairing-capable devices, use the displayed IP and *pairing port*, enter the on-screen code, then connect to the distinct *debugging port*.
+The first-party branded cloud-and-TV icon, light/dark vector wordmarks, native raster wordmark, TV banner and four wallpaper masters are maintained in [GoreeCloud/brand-assets](https://github.com/GoreeCloud/brand-assets/tree/main/products/tv-launcher) at pinned commit `0b9a767bf8dc9a6587b3a7d7eec2206d1568f93f`. The seven packaged consumer images are verified byte-for-byte by [the asset pin manifest](docs/BRAND_ASSET_PIN.json) and `.github/scripts/verify-asset-pin.py`. No default Android framework identity remains in the APK manifest. GoreeCloud UI remains the sole interface design-language authority; its color freedom applies here.
+
+## Privacy, security and capabilities
+
+The launcher requests **no Internet permission**, no package-wide visibility, usage-history or accessibility-control permissions, and no analytics. Only locally selected wallpaper, favorites and recently launched app component identifiers are stored in app-private preferences; Android backup is disabled. The original Google TV Home stays installed/enabled. Firmware-specific third-party HOME selection remains user-mediated and may be blocked by an OEM.
+
+**Content integrity:** There is no real media-provider account, title recommendation engine, video playback backend or TV Watch Next entitlement. Hero artwork is labeled as original scenery rather than pretend playable content; all app cards actually open installed apps. Real cross-app watch progress is not claimed.
+
+## Build and validate
+
+Requires JDK 21 and Android SDK 35:
+
+```sh
+python3 .github/scripts/verify-asset-pin.py
+./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+```
+
+Output: `app/build/outputs/apk/debug/app-debug.apk` (debug-signed). CI also runs an isolated Google TV emulator smoke workflow; read the **current run conclusion** before citing it as successful.
+
+## Wireless ADB to your own Google/Android TV
+
+Pair wireless debugging on the private LAN (when supported) and explicitly target your TV's serial, never a connected phone:
 
 ```sh
 adb pair TV_IP:PAIRING_PORT
 adb connect TV_IP:DEBUGGING_PORT
+adb -s TV_IP:DEBUGGING_PORT shell getprop ro.product.model
 adb -s TV_IP:DEBUGGING_PORT install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s TV_IP:DEBUGGING_PORT shell am start -n com.goreecloud.tvlauncher/.MainActivity
 ```
 
-For older Android TV ADB-over-network firmware, the procedure differs and may require USB to enable TCP/IP debugging first. Never expose ADB to the public Internet. Do not run `pm disable-user`, uninstall the original launcher, or alter device-owner settings to force a default.
+Never expose ADB to the public Internet, disable/uninstall the original TV launcher, or force a HOME role with system package disabling. The **Choose Home** button opens the supported system role dialog where available; installing does not make it default. Debug signing certificates can differ across machines and prevent in-place updates; back up the prior build and data and assess a rollback before replacing.
 
-In GoreeCloud TV, use **Set default Home** and complete the system confirmation if supported, then press Home to test. If the firmware does not offer the chooser, the app can still be opened as a normal TV app. Exact wireless ADB pairing and default selection depend on TV firmware.
+## Known acceptance gaps
 
-## Architecture
+Device-specific accessibility (TalkBack, reduced motion/high contrast), 720p/4K visual review, OEM Home chooser limitations, real personal-file picker usability, cross-device installation, long-term stability and signed release packaging are separate gates. The app is not production-certified.
 
-Single-activity native Java Android app with first-party Android SDK views (no runtime third-party dependencies). Installed apps are discovered through scoped manifest `<queries>` for launchable activities, *not* `QUERY_ALL_PACKAGES`. Only favorite component IDs are stored in Android private preferences. App backups are disabled. No Internet permission.
-
-## Release and rollback
-
-For testing, keep the stock launcher enabled and use the TV's Settings to switch Home back. APK uninstall: `adb uninstall com.goreecloud.tvlauncher` *only after* restoring another default Home and verifying its Home button behavior. Do not uninstall while the app is the only usable Home handler. Debug APKs are for development. A production release requires a release key, TV-specific tests, accessibility audit and security review.
-
-Licensed under MIT. See [LICENSE](LICENSE). The Gradle wrapper code is distributed under its own Gradle license.
+Copyright (c) 2026 GoreeCloud. Source license: MIT; see [LICENSE](LICENSE). Product artwork ownership/provenance is documented separately in the central brand-assets repository.

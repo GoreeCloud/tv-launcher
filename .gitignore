@@ -10,3 +10,6 @@ local.properties
 *.jks
 *.keystore
 *.properties.local
+
+# Local device-only test evidence. Never publish private screenshots, prefs or APK backups.
+.qa-private/
