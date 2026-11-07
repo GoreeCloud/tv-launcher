@@ -112,6 +112,7 @@ public final class MainActivity extends Activity {
     // Keep the D-pad target pending until the activity regains window focus.
     private boolean restoreSearchFocusAfterDialog;
     private boolean searchDialogDismissed;
+    private String pendingSearchQuery;
     private final BroadcastReceiver ticker = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) { updateClock(); }
     };
@@ -157,8 +158,22 @@ public final class MainActivity extends Activity {
     private void restoreSearchFocusIfReady() {
         if (!restoreSearchFocusAfterDialog || !searchDialogDismissed
             || root == null || !root.hasWindowFocus()) return;
-        View next = firstDockTile != null ? firstDockTile : findAppsButton;
-        if (next != null && next.requestFocus()) restoreSearchFocusAfterDialog = false;
+        restoreSearchFocusAfterDialog = false;
+        // The old dock remains attached until the modal finishes closing.
+        // Replace it only with the foreground activity window ready for D-pad.
+        appSearchQuery = pendingSearchQuery == null ? "" : pendingSearchQuery;
+        pendingSearchQuery = null;
+        renderDock();
+        final View next = firstDockTile != null ? firstDockTile : findAppsButton;
+        if (next == null) return;
+        next.requestFocus();
+        // Android TV can remove the previous focused tile during its layout
+        // pass. Repair only a genuinely missing focus, never steal a later
+        // user-selected focus from another control.
+        root.postDelayed(() -> {
+            if (root != null && root.hasWindowFocus() && getCurrentFocus() == null
+                && next.isAttachedToWindow()) next.requestFocus();
+        }, 120);
     }
 
     private SharedPreferences settings() { return getPreferences(Context.MODE_PRIVATE); }
@@ -479,6 +494,7 @@ public final class MainActivity extends Activity {
     private void showAppSearch() {
         restoreSearchFocusAfterDialog = false;
         searchDialogDismissed = false;
+        pendingSearchQuery = null;
         EditText input = new EditText(this);
         input.setSingleLine(true);
         input.setTextSize(17);
@@ -494,13 +510,11 @@ public final class MainActivity extends Activity {
             .setTitle("Find an app")
             .setView(body)
             .setPositiveButton("Show matches", (unused, which) -> {
-                appSearchQuery = input.getText().toString().trim();
-                renderDock();
+                pendingSearchQuery = input.getText().toString().trim();
                 restoreSearchFocusAfterDialog = true;
             })
             .setNeutralButton("Show all apps", (unused, which) -> {
-                appSearchQuery = "";
-                renderDock();
+                pendingSearchQuery = "";
                 restoreSearchFocusAfterDialog = true;
             })
             .setNegativeButton("Cancel", null)

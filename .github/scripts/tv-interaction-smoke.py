@@ -191,6 +191,12 @@ def test() -> None:
             "Filtered QA 12 tile not visibly available")
     print("PASS: search returns exactly one expected fixture app", flush=True)
 
+    if not any(item.get("focused") == "true" for item in filtered):
+        # Diagnostic evidence only in the previously identity-attested emulator.
+        (OUT / "search-focus-window.txt").write_bytes(
+            adb("shell", "dumpsys", "window"))
+        (OUT / "search-focus-screenshot.png").write_bytes(
+            adb("exec-out", "screencap", "-p"))
     desc = focused_description(filtered)
     require("GoreeCloud QA 12" in desc,
             "Search did not restore focus to sole matching app")
