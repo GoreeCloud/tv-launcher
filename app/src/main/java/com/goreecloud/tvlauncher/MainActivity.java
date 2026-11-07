@@ -168,7 +168,7 @@ public final class MainActivity extends Activity {
         updateClock();
 
         FrameLayout hero = new FrameLayout(this);
-        LinearLayout.LayoutParams heroLp = new LinearLayout.LayoutParams(-1, dp(270));
+        LinearLayout.LayoutParams heroLp = new LinearLayout.LayoutParams(-1, dp(190));
         heroLp.topMargin = dp(14);
         content.addView(hero, heroLp);
         LinearLayout copy = new LinearLayout(this);
@@ -262,7 +262,9 @@ public final class MainActivity extends Activity {
         utilities.addView(clearButton, clearLp);
         clearButton.setContentDescription("Reset to the built-in background");
         clearButton.setOnClickListener(v -> {
+            String old = prefs().getString(BACKGROUND_URI, null);
             prefs().edit().remove(BACKGROUND_URI).apply();
+            if (old != null) releaseBackgroundAccess(old);
             applyBackground();
             toast("Default backdrop restored");
         });
@@ -353,13 +355,6 @@ public final class MainActivity extends Activity {
             dockRow.addView(empty);
         }
         countLabel.setText(getString(R.string.app_count, apps.size(), pinned.size()));
-        TextView dockCaption = text(
-            usesSuggestions ? "Recently ready to explore • Pin to personalize"
-                : (pinned.size() > 6 ? "Showing the first six favorites" : "Your chosen favorites"),
-            13, MUTED, Typeface.NORMAL);
-        dockCaption.setPadding(dp(5), dp(10), 0, 0);
-        // Keep the dock compact: the hero and tiles are more important than a message.
-        dockCaption.setContentDescription(dockCaption.getText());
 
         String query = search == null ? "" : search.getText().toString();
         List<AppEntry> filtered = new ArrayList<>();
@@ -529,6 +524,15 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void releaseBackgroundAccess(String saved) {
+        try {
+            getContentResolver().releasePersistableUriPermission(
+                Uri.parse(saved), Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        } catch (SecurityException | IllegalArgumentException ignored) {
+            // The provider may have revoked access or been uninstalled.
+        }
+    }
+
     private void requestHomeRole() {
         if (Build.VERSION.SDK_INT >= 29) {
             RoleManager rm = getSystemService(RoleManager.class);
@@ -559,8 +563,10 @@ public final class MainActivity extends Activity {
             try {
                 getContentResolver().takePersistableUriPermission(
                     uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                String old = prefs().getString(BACKGROUND_URI, null);
                 prefs().edit().putString(BACKGROUND_URI, uri.toString()).apply();
                 applyBackground();
+                if (old != null && !old.equals(uri.toString())) releaseBackgroundAccess(old);
             } catch (SecurityException e) {
                 toast("Unable to keep permission to read that background.");
             }
