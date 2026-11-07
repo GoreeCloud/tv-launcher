@@ -68,11 +68,13 @@ adb -s TV_IP:DEBUGGING_PORT install -r app/build/outputs/apk/debug/app-debug.apk
 adb -s TV_IP:DEBUGGING_PORT shell am start -n com.goreecloud.tvlauncher/.MainActivity
 ```
 
+**Before any installation attempt, run the [read-only, fail-closed TV update preflight](docs/SIGNING_AND_ROLLBACK.md).** It compares the candidate's signed identity and version to the already-installed APK and blocks a different debug signer without touching app data or TV Home. Never skip backups or visual approval merely because this compatibility check passes.
+
 Never expose ADB to the public Internet, disable/uninstall the original TV launcher, or force a HOME role with system package disabling. The **Choose Home** button requests the system role where supported. A TV may report that this role is held while its manufacturer Home still handles the Home key. The app now checks the resolved Home activity and provides a non-destructive explanation and system Home settings option. Installing an APK or obtaining a role alone does not prove effective default routing. Debug signing certificates can differ across machines and prevent in-place updates; back up the prior build and data and assess a rollback before replacing.
 
 ## Additional package and small-screen release checks
 
-The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions also exercises an isolated Google TV emulator at **1920×1080 and 1280×720**, checking screenshot dimensions and actionable D-pad focus. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
+The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions exercises an isolated Google TV API 34 emulator at **1920×1080 and 1280×720**, checking actual screenshot dimensions and actionable D-pad focus. **No automated UHD coverage is claimed**: the hosted Google TV image ignored attempts to change its size to 3840×2160 and remained 1920×1080. A dedicated 4K-compatible device or emulator is still required for native UHD QA and founder visual acceptance. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
 
 ## Known acceptance gaps
 
