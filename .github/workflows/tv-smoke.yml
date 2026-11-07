@@ -42,6 +42,10 @@ jobs:
           find "$ANDROID_AVD_HOME" -maxdepth 2 -type f -name 'config.ini' -o -name '*.ini' | head -12
           "$ANDROID_HOME/emulator/emulator" -list-avds
           test -f "$ANDROID_AVD_HOME/GoreeCloudTvTest.ini"
+          CONFIG="$ANDROID_AVD_HOME/GoreeCloudTvTest.avd/config.ini"
+          test -f "$CONFIG"
+          sed -i -e '/^hw.lcd.width=/d' -e '/^hw.lcd.height=/d' -e '/^hw.lcd.density=/d' "$CONFIG"
+          printf "hw.lcd.width=1920\nhw.lcd.height=1080\nhw.lcd.density=240\n" >> "$CONFIG"
       - name: Boot emulator and smoke-test app
         run: |
           set -euo pipefail

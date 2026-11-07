@@ -63,6 +63,7 @@ public final class MainActivity extends Activity {
     private TextView clock;
     private TextView countLabel;
     private EditText search;
+    private Button defaultHomeButton;
     private boolean receiverRegistered;
 
     private final BroadcastReceiver clockReceiver = new BroadcastReceiver() {
@@ -79,6 +80,8 @@ public final class MainActivity extends Activity {
         favorites.addAll(prefs.getStringSet(FAVORITES, new HashSet<>()));
         buildLayout();
         refreshApps();
+        // Focus a visible, safe control for D-pad-only remotes on first launch.
+        if (defaultHomeButton != null) defaultHomeButton.requestFocus();
     }
 
     @Override protected void onResume() {
@@ -160,6 +163,7 @@ public final class MainActivity extends Activity {
         });
 
         Button defaults = action("Set default Home");
+        defaultHomeButton = defaults;
         utility.addView(defaults, new LinearLayout.LayoutParams(dp(194), dp(54)));
         defaults.setOnClickListener(v -> requestHomeRole());
 
@@ -188,8 +192,6 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams footParams = new LinearLayout.LayoutParams(-1, dp(65));
         footParams.topMargin = dp(20);
         content.addView(foot, footParams);
-        content.setFocusableInTouchMode(true);
-        content.requestFocus();
         countLabel = label("", 14, MUTED, Typeface.NORMAL);
         foot.addView(countLabel, new LinearLayout.LayoutParams(0, -2, 1));
         Button refresh = action("Refresh apps");

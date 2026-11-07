@@ -15,6 +15,8 @@ for attempt in $(seq 1 180); do
 done
 test "${booted:-}" = "1" || { echo "Emulator did not finish booting"; exit 1; }
 adb shell input keyevent KEYCODE_WAKEUP || true
+adb shell wm size 1920x1080
+adb shell wm density 240
 adb shell wm size > "$OUT_DIR/screen-size.txt"
 adb shell getprop ro.build.version.sdk > "$OUT_DIR/api-level.txt"
 adb shell getprop ro.product.model > "$OUT_DIR/device-model.txt"
@@ -31,6 +33,15 @@ adb shell input keyevent KEYCODE_DPAD_LEFT
 adb shell uiautomator dump /sdcard/window-goreecloud.xml
 adb pull /sdcard/window-goreecloud.xml "$OUT_DIR/window.xml" >/dev/null
 grep -Eq 'GOREECLOUD TV|Make yourself at home' "$OUT_DIR/window.xml"
+python3 - "$OUT_DIR/window.xml" <<'FOCUS_CHECK'
+import sys
+import xml.etree.ElementTree as ET
+nodes = ET.parse(sys.argv[1]).getroot().findall('.//node')
+focused = [node for node in nodes if node.attrib.get('focused') == 'true']
+if not any(node.attrib.get('clickable') == 'true' for node in focused):
+    raise SystemExit('D-pad has no visible, actionable focused control')
+print('PASS: D-pad focus on actionable TV control')
+FOCUS_CHECK
 adb exec-out screencap -p > "$OUT_DIR/home.png"
 adb shell pidof com.goreecloud.tvlauncher > "$OUT_DIR/pid.txt"
 test -s "$OUT_DIR/pid.txt"

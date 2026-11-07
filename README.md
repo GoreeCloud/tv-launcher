@@ -1,6 +1,6 @@
 # GoreeCloud TV Launcher
 
-An original, native, D-pad-first home screen for **Android TV and Google TV**, built for direct APK installation. Development preview v0.1.0.
+An original, native, D-pad-first home screen for **Android TV and Google TV**, built for direct APK installation. Development preview v0.1.1.
 
 ## Features
 
@@ -8,7 +8,7 @@ An original, native, D-pad-first home screen for **Android TV and Google TV**, b
 - Display installed TV apps and compatible launchable apps; launch with remote OK.
 - Local-only app search and pinned/favorite tiles (long-press OK or press Menu to toggle).
 - Current date/time, app refresh, TV settings shortcut, and user-driven Home selection.
-- D-pad focus outlines, large cards, landscape/overscan spacing and no touch requirement.
+- Visible first-focus affordance, D-pad focus outlines, large cards, landscape/overscan spacing and no touch requirement.
 - Zero network permission, no telemetry, ads, usage stats, sensitive accessibility services, or device-admin access.
 - Original GC UI-inspired semantic foreground, surfaces and focus states; colors are this app's design choice, not ecosystem brand defaults.
 
