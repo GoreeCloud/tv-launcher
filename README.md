@@ -1,18 +1,18 @@
 # GoreeCloud TV Launcher
 
-**v0.2.0-alpha.3 · Native Android TV / Google TV · Development preview**
+**v0.2.0-alpha.4 · Native Android TV / Google TV · Development preview**
 
 An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
 ## Implemented home UI
 
 - **Immersive hero:** featured first-party wallpaper, GoreeCloud TV logo, clock, original world title/description, real Explore Apps and Choose Wallpaper controls, and four selectable scene indicators.
-- **Floating translucent dock:** six large TV app tiles, readable labels, strong focus outline/scale, user-pinned favorites, responsive remote navigation, and optional quick-launch suggestions before any pinning.
+- **Your Apps at the top:** one floating translucent, horizontally scrollable dock immediately below the cinematic hero, with all installed launchable apps, colored accent gradients, high-contrast remote focus, and optional priority ordering. There is no separate Favorites section or duplicated app grid.
 - **Continue in Your Apps:** actionable recently launched app shortcuts stored only in private on-device preferences. The empty state shows launchable app shortcuts; this is explicitly **not** a fabricated Continue Watching history or episode-progress feed.
 - **GoreeCloud Worlds:** a horizontally scrollable, D-pad-operable visual rail to select one of four bundled original wallpapers.
-- **Recommended for You:** a discoverable carousel of actual installed, non-pinned apps. The selection is deterministic and local; no behavioral personalization, sponsor payments, external recommendations or tracking.
-- **Your Apps:** complete searchable launchable app grid, TV settings link, Home role request where permitted, and localized clock.
-- Remote OK to launch, Menu or long-press OK to pin/unpin, keyboard/remote focus retention, app icon loading from installed activities, scalable cards, touch-free controls and Android TV banner registration.
+- **Recommended for You:** a discoverable carousel of actual installed apps. The selection is deterministic and local; no behavioral personalization, sponsor payments, external recommendations or tracking.
+- **App search and settings:** Find an app filters the single top Your Apps dock; TV settings, Home-role request (where permitted), and the clock remain available.
+- Remote OK to launch, Menu or long-press OK to prioritize/deprioritize an app within the same Your Apps row, keyboard/remote focus retention, actual installed app icons, scalable cards, touch-free controls and Android TV banner registration.
 
 ### Four built-in original wallpapers
 
@@ -41,7 +41,7 @@ The first-party branded cloud-and-TV icon, light/dark vector wordmarks, native r
 
 ## Privacy, security and capabilities
 
-The launcher requests **no Internet permission**, no package-wide visibility, usage-history or accessibility-control permissions, and no analytics. Only locally selected wallpaper, favorites and recently launched app component identifiers are stored in app-private preferences; Android backup is disabled. The original Google TV Home stays installed/enabled. Firmware-specific third-party HOME selection remains user-mediated and may be blocked by an OEM.
+The launcher requests **no Internet permission**, no package-wide visibility, usage-history or accessibility-control permissions, and no analytics. Only locally selected wallpaper, optional app ordering and recently launched app component identifiers are stored in app-private preferences; Android backup is disabled. The original Google TV Home stays installed/enabled. Firmware-specific third-party HOME selection remains user-mediated and may be blocked by an OEM.
 
 **Content integrity:** There is no real media-provider account, title recommendation engine, video playback backend or TV Watch Next entitlement. Hero artwork is labeled as original scenery rather than pretend playable content; all app cards actually open installed apps. Real cross-app watch progress is not claimed.
 
@@ -79,3 +79,7 @@ The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py
 Device-specific accessibility (TalkBack, reduced motion/high contrast), 720p/4K visual review, OEM Home chooser limitations, real personal-file picker usability, cross-device installation, long-term stability and signed release packaging are separate gates. The app is not production-certified.
 
 Copyright (c) 2026 GoreeCloud. Source license: MIT; see [LICENSE](LICENSE). Product artwork ownership/provenance is documented separately in the central brand-assets repository.
+
+## Single Your Apps rail (alpha.4)
+
+The founder-approved launcher layout places **Your Apps** immediately below the cinematic featured wallpaper. This one translucent, D-pad-scrollable rail with contrasting original accent gradients exposes **all installed launchable apps**, with no separate Favorites area or duplicated lower app grid. **Find an app** filters that same row; **Show all apps** clears the filter. Holding OK / Menu can optionally prioritize an app at the front of **Your Apps** without hiding others. The user-selected order is kept locally using the earlier persisted preference for backward compatibility. Below are local recently opened apps, installed-app suggestions and the four original offline wallpapers. The wording makes no claim of actual streaming playback/watch progress.

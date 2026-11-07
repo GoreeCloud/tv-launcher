@@ -22,9 +22,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.Editable;
 import android.text.TextUtils;
-import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -100,13 +98,14 @@ public final class MainActivity extends Activity {
     private TextView featuredName;
     private TextView dockTitle;
     private LinearLayout dock;
-    private LinearLayout appRows;
+    private HorizontalScrollView dockScroll;
+    private String appSearchQuery = "";
     private LinearLayout continueRow;
     private LinearLayout recommendations;
     private TextView continueSubtitle;
     private TextView appCount;
-    private EditText search;
     private View firstDockTile;
+    private View findAppsButton;
     private AppEntry focusedApp;
     private boolean receiverRegistered;
     private final BroadcastReceiver ticker = new BroadcastReceiver() {
@@ -191,13 +190,13 @@ public final class MainActivity extends Activity {
         // is not represented as playable content or an invented streaming show.
         LinearLayout hero = vertical();
         hero.setGravity(Gravity.BOTTOM | Gravity.START);
-        LinearLayout.LayoutParams heroLp = new LinearLayout.LayoutParams(-1, dp(190));
+        LinearLayout.LayoutParams heroLp = new LinearLayout.LayoutParams(-1, dp(205));
         heroLp.topMargin = dp(8);
         page.addView(hero, heroLp);
         TextView kicker = text("A GOREECLOUD ORIGINAL  /  FOUR WORLDS", 12, SOFT, Typeface.BOLD);
         kicker.setLetterSpacing(.18f);
         hero.addView(kicker);
-        heroTitle = text("", 31, TEXT, Typeface.BOLD);
+        heroTitle = text("", 38, TEXT, Typeface.BOLD);
         heroTitle.setLetterSpacing(.13f);
         LinearLayout.LayoutParams htp = new LinearLayout.LayoutParams(-1, -2);
         htp.topMargin = dp(4);
@@ -215,7 +214,6 @@ public final class MainActivity extends Activity {
         actions.addView(browse, new LinearLayout.LayoutParams(dp(151), dp(41)));
         browse.setOnClickListener(v -> {
             if (firstDockTile != null) firstDockTile.requestFocus();
-            else if (search != null) search.requestFocus();
         });
         Button scenes = button("Choose wallpaper", false);
         LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(dp(178), dp(41));
@@ -241,26 +239,44 @@ public final class MainActivity extends Activity {
             dot.setTag("scene-dot-" + i);
         }
 
+        // One canonical app section, directly beneath the cinematic hero.
+        // All installed launchable apps remain accessible here; priority only
+        // changes ordering, never hides the other apps in a separate Favorites row.
         LinearLayout dockPanel = vertical();
-        dockPanel.setPadding(dp(15), dp(10), dp(15), dp(12));
-        dockPanel.setBackground(shape(FROST, dp(26), 0xA1B2C1D9, 1));
+        dockPanel.setPadding(dp(17), dp(13), dp(17), dp(15));
+        dockPanel.setBackground(shape(0xDA292B3D, dp(29), 0x99C9D0E6, 1));
         dockPanel.setClipChildren(false);
         dockPanel.setClipToPadding(false);
         page.addView(dockPanel);
         LinearLayout dockHeading = horizontal();
         dockHeading.setGravity(Gravity.CENTER_VERTICAL);
-        dockPanel.addView(dockHeading);
-        dockTitle = text("QUICK LAUNCH", 12, TEXT, Typeface.BOLD);
-        dockTitle.setLetterSpacing(.12f);
+        dockPanel.addView(dockHeading, new LinearLayout.LayoutParams(-1, dp(43)));
+        dockTitle = text("YOUR APPS", 18, TEXT, Typeface.BOLD);
+        dockTitle.setLetterSpacing(.06f);
         dockHeading.addView(dockTitle, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView hint = text("Menu / hold OK to pin", 12, SOFT, Typeface.NORMAL);
-        dockHeading.addView(hint);
+        appCount = text("", 12, SOFT, Typeface.NORMAL);
+        dockHeading.addView(appCount);
+        Button findApps = button("Find an app", false);
+        LinearLayout.LayoutParams searchButtonLp =
+            new LinearLayout.LayoutParams(dp(125), dp(39));
+        searchButtonLp.leftMargin = dp(15);
+        dockHeading.addView(findApps, searchButtonLp);
+        findAppsButton = findApps;
+        findApps.setOnClickListener(v -> showAppSearch());
+        dockScroll = new HorizontalScrollView(this);
+        dockScroll.setHorizontalScrollBarEnabled(false);
+        dockScroll.setFillViewport(true);
+        dockScroll.setClipChildren(false);
+        dockScroll.setClipToPadding(false);
+        LinearLayout.LayoutParams dockRowLp = new LinearLayout.LayoutParams(-1, dp(134));
+        dockRowLp.topMargin = dp(3);
+        dockPanel.addView(dockScroll, dockRowLp);
         dock = horizontal();
+        dock.setGravity(Gravity.CENTER_VERTICAL);
         dock.setClipChildren(false);
         dock.setClipToPadding(false);
-        LinearLayout.LayoutParams dockRowLp = new LinearLayout.LayoutParams(-1, -2);
-        dockRowLp.topMargin = dp(7);
-        dockPanel.addView(dock, dockRowLp);
+        dock.setPadding(dp(4), dp(5), dp(4), dp(5));
+        dockScroll.addView(dock);
 
         // Real recently opened applications; never simulate an episode or play-progress state.
         LinearLayout recentHeading = sectionHeader("CONTINUE IN YOUR APPS",
@@ -280,6 +296,19 @@ public final class MainActivity extends Activity {
         continueRow.setClipToPadding(false);
         recentScroll.addView(continueRow);
 
+        LinearLayout recommendedHeading = sectionHeader("RECOMMENDED FOR YOU",
+            "Installed apps only  ·  No sponsored content or behavioral tracking");
+        LinearLayout.LayoutParams recomHeaderLp = new LinearLayout.LayoutParams(-1, -2);
+        recomHeaderLp.topMargin = dp(18);
+        page.addView(recommendedHeading, recomHeaderLp);
+        HorizontalScrollView recomScroll = new HorizontalScrollView(this);
+        recomScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout.LayoutParams recomLp = new LinearLayout.LayoutParams(-1, dp(107));
+        recomLp.topMargin = dp(7);
+        page.addView(recomScroll, recomLp);
+        recommendations = horizontal();
+        recomScroll.addView(recommendations);
+
         LinearLayout worldHeading = sectionHeader("EXPLORE GOREECLOUD WORLDS",
             "Four original offline wallpapers");
         LinearLayout.LayoutParams whp = new LinearLayout.LayoutParams(-1, -2);
@@ -296,60 +325,6 @@ public final class MainActivity extends Activity {
         worlds.setClipToPadding(false);
         worldScroll.addView(worlds);
         for (int i = 0; i < SCENES.length; i++) worlds.addView(sceneCard(i));
-
-        LinearLayout recommendedHeading = sectionHeader("RECOMMENDED FOR YOU",
-            "Installed apps only  ·  No sponsored content or behavioral tracking");
-        LinearLayout.LayoutParams recomHeaderLp = new LinearLayout.LayoutParams(-1, -2);
-        recomHeaderLp.topMargin = dp(18);
-        page.addView(recommendedHeading, recomHeaderLp);
-        HorizontalScrollView recomScroll = new HorizontalScrollView(this);
-        recomScroll.setHorizontalScrollBarEnabled(false);
-        LinearLayout.LayoutParams recomLp = new LinearLayout.LayoutParams(-1, dp(107));
-        recomLp.topMargin = dp(7);
-        page.addView(recomScroll, recomLp);
-        recommendations = horizontal();
-        recomScroll.addView(recommendations);
-
-        LinearLayout appHeading = sectionHeader("YOUR APPS", "Available on this TV");
-        LinearLayout.LayoutParams ah = new LinearLayout.LayoutParams(-1, -2);
-        ah.topMargin = dp(20);
-        page.addView(appHeading, ah);
-        LinearLayout searchRow = horizontal();
-        LinearLayout.LayoutParams shp = new LinearLayout.LayoutParams(-1, dp(52));
-        shp.topMargin = dp(9);
-        page.addView(searchRow, shp);
-
-        search = new EditText(this);
-        search.setSingleLine(true);
-        search.setHint("Search installed apps");
-        search.setHintTextColor(SOFT);
-        search.setTextSize(15);
-        search.setTextColor(TEXT);
-        search.setPadding(dp(16), 0, dp(16), 0);
-        search.setBackground(shape(0xD2273045, dp(15), OUTLINE, 1));
-        search.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
-        search.setContentDescription("Search installed apps");
-        LinearLayout.LayoutParams inp = new LinearLayout.LayoutParams(0, dp(48), 1);
-        inp.rightMargin = dp(12);
-        searchRow.addView(search, inp);
-        focusStyle(search, false, 0xD2273045, false);
-        search.addTextChangedListener(new TextWatcher() {
-            @Override public void beforeTextChanged(CharSequence s,int st,int c,int a) { }
-            @Override public void onTextChanged(CharSequence s,int start,int before,int count) {
-                renderAllApps();
-            }
-            @Override public void afterTextChanged(Editable e) { }
-        });
-        Button change = button("Wallpapers", false);
-        searchRow.addView(change, new LinearLayout.LayoutParams(dp(130), dp(48)));
-        change.setOnClickListener(v -> chooseScene());
-
-        appRows = vertical();
-        LinearLayout.LayoutParams appsLp = new LinearLayout.LayoutParams(-1, -2);
-        appsLp.topMargin = dp(8);
-        page.addView(appRows, appsLp);
-        appCount = text("", 13, SOFT, Typeface.NORMAL);
-        page.addView(appCount);
 
         LinearLayout footer = horizontal();
         footer.setGravity(Gravity.CENTER_VERTICAL);
@@ -425,7 +400,6 @@ public final class MainActivity extends Activity {
         renderDock();
         renderRecent();
         renderRecommendations();
-        renderAllApps();
         if (key != null) restoreFocus(key);
     }
 
@@ -451,20 +425,68 @@ public final class MainActivity extends Activity {
         if (dock == null) return;
         dock.removeAllViews();
         firstDockTile = null;
-        List<AppEntry> pinned = new ArrayList<>();
-        for (AppEntry app : apps) if (favorites.contains(app.key())) pinned.add(app);
-        dockTitle.setText(pinned.isEmpty() ? "QUICK LAUNCH" : "FAVORITES");
-        List<AppEntry> shown = pinned.isEmpty() ? apps : pinned;
-        for (int i=0;i<Math.min(6,shown.size());i++) {
-            AppEntry app = shown.get(i);
-            View tile = appTile(app,i,true);
-            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0,dp(111),1);
-            if(i>0)lp.leftMargin=dp(9);
-            dock.addView(tile,lp);
-            if (i == 0) firstDockTile=tile;
+        List<AppEntry> ordered = AppDockOrder.pinnedFirst(apps,
+            item -> favorites.contains(item.key()));
+        int count = 0;
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        int screenDp = Math.round(dm.widthPixels / dm.density);
+        // Six visible icon cards on a typical TV, with natural horizontal
+        // D-pad scrolling for every additional installed application.
+        int tileDp = Math.max(106, Math.min(174, (screenDp - 130) / 6));
+        for (AppEntry app : ordered) {
+            if (!AppFilter.matches(app.label, appSearchQuery)) continue;
+            View tile = appTile(app, count, true);
+            LinearLayout.LayoutParams lp =
+                new LinearLayout.LayoutParams(dp(tileDp), dp(117));
+            lp.rightMargin = dp(11);
+            dock.addView(tile, lp);
+            if (firstDockTile == null) firstDockTile = tile;
+            count++;
         }
-        if (shown.isEmpty()) dock.addView(text("No launchable TV apps found",16,SOFT,Typeface.NORMAL));
-        if (appCount!=null) appCount.setText(getString(R.string.app_count, apps.size(), pinned.size()));
+        if (count == 0) {
+            TextView empty = text(apps.isEmpty()
+                ? "No launchable TV apps found" : "No matching apps. Use Find an app to clear the filter.",
+                15, SOFT, Typeface.NORMAL);
+            empty.setGravity(Gravity.CENTER_VERTICAL);
+            dock.addView(empty,
+                new LinearLayout.LayoutParams(-2, dp(114)));
+        }
+        if (appCount != null) {
+            appCount.setText(appSearchQuery.isEmpty()
+                ? apps.size() + " installed"
+                : count + " / " + apps.size() + " apps");
+        }
+    }
+
+    private void showAppSearch() {
+        EditText input = new EditText(this);
+        input.setSingleLine(true);
+        input.setTextSize(17);
+        input.setHint("App name");
+        input.setText(appSearchQuery);
+        input.setSelectAllOnFocus(true);
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
+        input.setContentDescription("Filter apps by name");
+        LinearLayout body = vertical();
+        body.setPadding(dp(20), dp(7), dp(20), dp(5));
+        body.addView(input);
+        new AlertDialog.Builder(this)
+            .setTitle("Find an app")
+            .setView(body)
+            .setPositiveButton("Show matches", (dialog, which) -> {
+                appSearchQuery = input.getText().toString().trim();
+                renderDock();
+                if (firstDockTile != null) firstDockTile.requestFocus();
+                else if (findAppsButton != null) findAppsButton.requestFocus();
+            })
+            .setNeutralButton("Show all apps", (dialog, which) -> {
+                appSearchQuery = "";
+                renderDock();
+                if (firstDockTile != null) firstDockTile.requestFocus();
+                else if (findAppsButton != null) findAppsButton.requestFocus();
+            })
+            .setNegativeButton("Cancel", null)
+            .show();
     }
 
     private void renderRecent() {
@@ -535,7 +557,6 @@ public final class MainActivity extends Activity {
         recommendations.removeAllViews();
         int shown = 0;
         for (AppEntry app : apps) {
-            if (favorites.contains(app.key())) continue;
             if (shown >= 6) break;
             LinearLayout card = horizontal();
             card.setGravity(Gravity.CENTER_VERTICAL);
@@ -563,36 +584,7 @@ public final class MainActivity extends Activity {
             shown++;
         }
         if (shown == 0) recommendations.addView(text(
-            "Your pinned apps are already in Quick Launch", 14, SOFT, Typeface.NORMAL));
-    }
-
-    private void renderAllApps() {
-        if (appRows == null) return;
-        appRows.removeAllViews();
-        String query=search == null ? "" : search.getText().toString();
-        List<AppEntry> visible=new ArrayList<>();
-        for(AppEntry app:apps)if(AppFilter.matches(app.label,query))visible.add(app);
-        DisplayMetrics dm=getResources().getDisplayMetrics();
-        int widthDp=Math.round(dm.widthPixels/dm.density);
-        int cols=Math.max(3,Math.min(6,(widthDp-76)/150));
-        for(int i=0;i<visible.size();i+=cols){
-            LinearLayout row=horizontal();
-            row.setClipChildren(false);
-            appRows.addView(row);
-            for(int j=0;j<cols;j++){
-                int pos=i+j;
-                View v=pos<visible.size()?appTile(visible.get(pos),pos,false):new View(this);
-                LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(111),1);
-                lp.setMargins(0,dp(7),dp(10),dp(7));
-                row.addView(v,lp);
-            }
-        }
-        if(visible.isEmpty()){
-            TextView empty=text("No matching apps found",16,SOFT,Typeface.NORMAL);
-            empty.setPadding(dp(15),dp(20),0,dp(24));
-            appRows.addView(empty);
-        }
-        if(appCount!=null)appCount.setText(getString(R.string.app_count,apps.size(),favorites.size()));
+            "No installed apps are available", 14, SOFT, Typeface.NORMAL));
     }
 
     private View appTile(AppEntry app,int index,boolean prominent) {
@@ -603,9 +595,10 @@ public final class MainActivity extends Activity {
         tile.setClickable(true);
         tile.setLongClickable(true);
         tile.setTag(app.key());
-        tile.setContentDescription(app.label+(favorites.contains(app.key())?", pinned. ":". ")
-            +"Press OK to open; hold OK or Menu to toggle favorite");
-        tile.setBackground(shape(CARD,dp(20),OUTLINE,1));
+        tile.setContentDescription(app.label
+            + (favorites.contains(app.key()) ? ", prioritized. " : ". ")
+            + "Press OK to open; hold OK or Menu to change app order");
+        tile.setBackground(dockTileSurface(index, false));
         tile.addView(appIcon(app,prominent?60:57),
             new LinearLayout.LayoutParams(dp(prominent?60:57),dp(prominent?60:57)));
         TextView label=text(app.label,prominent?14:13,TEXT,Typeface.BOLD);
@@ -616,8 +609,7 @@ public final class MainActivity extends Activity {
         tlp.topMargin=dp(6);
         tile.addView(label,tlp);
         tile.setOnFocusChangeListener((v,focused)->{
-            v.setBackground(shape(focused?0xD254366C:CARD,dp(20),
-                focused?FOCUS:OUTLINE,focused?4:1));
+            v.setBackground(dockTileSurface(index, focused));
             v.setScaleX(focused?1.045f:1f);
             v.setScaleY(focused?1.045f:1f);
             v.setElevation(focused?dp(16):0);
@@ -631,6 +623,27 @@ public final class MainActivity extends Activity {
             return true;
         });
         return tile;
+    }
+
+    // TV-focus treatment inspired by the founder's mockup, using first-party
+    // semantic accent colors and Android-native vector-free gradients.
+    private GradientDrawable dockTileSurface(int index, boolean focused) {
+        int accent = TINTS[index % TINTS.length];
+        int upper = blend(accent, 0xFF121A2D, focused ? .66f : .54f);
+        int lower = blend(accent, 0xFF0E1424, focused ? .34f : .23f);
+        GradientDrawable background = new GradientDrawable(
+            GradientDrawable.Orientation.TL_BR, new int[] {upper, lower});
+        background.setCornerRadius(dp(20));
+        background.setStroke(dp(focused ? 4 : 1), focused ? FOCUS : OUTLINE);
+        return background;
+    }
+
+    private int blend(int accent, int dark, float accentAmount) {
+        float other = 1f - accentAmount;
+        return Color.rgb(
+            Math.round(Color.red(accent) * accentAmount + Color.red(dark) * other),
+            Math.round(Color.green(accent) * accentAmount + Color.green(dark) * other),
+            Math.round(Color.blue(accent) * accentAmount + Color.blue(dark) * other));
     }
 
     private ImageView appIcon(AppEntry app,int size) {
@@ -647,18 +660,16 @@ public final class MainActivity extends Activity {
     private void toggleFavorite(AppEntry app) {
         if(!favorites.add(app.key()))favorites.remove(app.key());
         settings().edit().putStringSet(PREF_FAVORITES,new HashSet<>(favorites)).apply();
-        renderDock();renderAllApps();
+        renderDock();
         restoreFocus(app.key());
-        toast(app.label+(favorites.contains(app.key())?" pinned":" unpinned"));
+        toast(app.label+(favorites.contains(app.key())
+            ? " moved to the front of Your Apps" : " returned to normal ordering"));
     }
 
     private void restoreFocus(String key) {
         if (findAndFocus(dock,key))return;
         if (findAndFocus(continueRow,key))return;
-        for(int i=0;i<appRows.getChildCount();i++){
-            View row=appRows.getChildAt(i);
-            if(row instanceof ViewGroup&&findAndFocus((ViewGroup)row,key))return;
-        }
+        findAndFocus(recommendations,key);
     }
     private boolean findAndFocus(ViewGroup group,String key) {
         if(group==null)return false;
