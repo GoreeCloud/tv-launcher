@@ -1,18 +1,20 @@
 # GoreeCloud TV Launcher
 
-An original, native, D-pad-first home screen for **Android TV and Google TV**, built for direct APK installation. Development preview v0.1.1.
+An original, native, D-pad-first home screen for **Android TV and Google TV**, built for direct APK installation. Development preview v0.1.2.
 
 ## Features
 
 - Android `HOME` intent handler and Android TV `LEANBACK_LAUNCHER` entry point.
 - Display installed TV apps and compatible launchable apps; launch with remote OK.
+- Original cinematic-inspired composition: fullscreen backdrop, translucent floating favorites dock, large D-pad focusable app tiles, and an installed-app library.
+- User-selected local image backgrounds through Android's document picker where available; no promotional imagery is bundled.
 - Local-only app search and pinned/favorite tiles (long-press OK or press Menu to toggle).
 - Current date/time, app refresh, TV settings shortcut, and user-driven Home selection.
 - Visible first-focus affordance, D-pad focus outlines, large cards, landscape/overscan spacing and no touch requirement.
 - Zero network permission, no telemetry, ads, usage stats, sensitive accessibility services, or device-admin access.
 - Original GC UI-inspired semantic foreground, surfaces and focus states; colors are this app's design choice, not ecosystem brand defaults.
 
-**Known limits:** OEM firmware may block third-party HOME selection; Google TV manufacturer launchers can impose restrictions. The app never disables a system package, suppresses OTA updates or auto-claims the Home role. Pinned apps are local and may disappear if uninstalled. TV-specific acceptance, visual QA, TalkBack testing, and long-press and Menu-key behavior vary by remote and remain pending until tested on an actual TV.
+**Known limits:** OEM firmware may block third-party HOME selection; Google TV manufacturer launchers can impose restrictions. The app never disables a system package, suppresses OTA updates or auto-claims the Home role. Pinned apps are local and may disappear if uninstalled. The installed preview was launched on an onn. 4K Streaming Box with stock Home fallback retained; current redesigned version still requires fresh physical-TV D-pad and accessibility acceptance. Wallpaper selection depends on the TV having a compatible document picker.
 
 ## Build
 
@@ -37,7 +39,7 @@ adb -s TV_IP:DEBUGGING_PORT shell am start -n com.goreecloud.tvlauncher/.MainAct
 
 For older Android TV ADB-over-network firmware, the procedure differs and may require USB to enable TCP/IP debugging first. Never expose ADB to the public Internet. Do not run `pm disable-user`, uninstall the original launcher, or alter device-owner settings to force a default.
 
-In GoreeCloud TV, use **Set default Home** and complete the system confirmation if supported, then press Home to test. If the firmware does not offer the chooser, the app can still be opened as a normal TV app. Exact wireless ADB pairing and default selection depend on TV firmware.
+In GoreeCloud TV, use **Choose Home** and complete the system confirmation if supported, then press Home to test. If the firmware does not offer the chooser, the app can still be opened as a normal TV app. Exact wireless ADB pairing and default selection depend on TV firmware.
 
 ## Architecture
 
