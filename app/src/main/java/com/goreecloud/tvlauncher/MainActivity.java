@@ -799,7 +799,13 @@ public final class MainActivity extends Activity {
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
         if(requestCode==REQUEST_HOME){
-            toast(resultCode==RESULT_OK?"Home role accepted":"Home unchanged");
+            if (resultCode != RESULT_OK) {
+                toast("Home role selection unchanged");
+            } else if (currentHomeRoute(true) == HomeRoute.Status.EFFECTIVE_HOME) {
+                toast("GoreeCloud TV now resolves as Home");
+            } else {
+                toast("Role granted; verify which launcher your TV opens with Home");
+            }
         } else if(requestCode==PICK_BACKGROUND&&resultCode==RESULT_OK
             &&data!=null&&data.getData()!=null){
             Uri uri=data.getData();
@@ -813,22 +819,64 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private HomeRoute.Status currentHomeRoute(boolean roleHeld) {
+        String resolvedPackage = null;
+        try {
+            Intent home = new Intent(Intent.ACTION_MAIN);
+            home.addCategory(Intent.CATEGORY_HOME);
+            home.addCategory(Intent.CATEGORY_DEFAULT);
+            ResolveInfo current = getPackageManager().resolveActivity(
+                home, PackageManager.MATCH_DEFAULT_ONLY);
+            if (current != null && current.activityInfo != null) {
+                resolvedPackage = current.activityInfo.packageName;
+            }
+        } catch (SecurityException ignored) {
+            // TV package-visibility policies can prevent resolving the Home target.
+        }
+        return HomeRoute.classify(getPackageName(), resolvedPackage, roleHeld);
+    }
+
     private void requestHomeRole() {
-        if(Build.VERSION.SDK_INT>=29){
-            RoleManager manager=getSystemService(RoleManager.class);
-            if(manager!=null&&manager.isRoleAvailable(RoleManager.ROLE_HOME)){
-                if(manager.isRoleHeld(RoleManager.ROLE_HOME)){
-                    toast("Already the selected Home app");return;
+        if (Build.VERSION.SDK_INT >= 29) {
+            RoleManager manager = getSystemService(RoleManager.class);
+            if (manager != null && manager.isRoleAvailable(RoleManager.ROLE_HOME)) {
+                if (manager.isRoleHeld(RoleManager.ROLE_HOME)) {
+                    HomeRoute.Status actual = currentHomeRoute(true);
+                    if (actual == HomeRoute.Status.EFFECTIVE_HOME) {
+                        toast("GoreeCloud TV currently handles the Home button");
+                    } else {
+                        String message = actual == HomeRoute.Status.ROLE_GRANTED_BUT_SYSTEM_ROUTED
+                            ? "Android grants GoreeCloud TV the Home role, but this TV still "
+                                + "routes the Home button to its manufacturer launcher. "
+                                + "Your original Home stays enabled."
+                            : "Android grants GoreeCloud TV the Home role, but the "
+                                + "effective Home activity could not be verified on this TV.";
+                        new AlertDialog.Builder(this)
+                            .setTitle("Home button routing")
+                            .setMessage(message)
+                            .setPositiveButton("System Home settings", (dialog, which) -> openHomeSettings())
+                            .setNegativeButton("Keep system Home", (dialog, which) -> dialog.dismiss())
+                            .show();
+                    }
+                    return;
                 }
-                try{
-                    startActivityForResult(manager.createRequestRoleIntent(RoleManager.ROLE_HOME),
-                        REQUEST_HOME);return;
-                }catch(ActivityNotFoundException|SecurityException ignored){}
+                try {
+                    startActivityForResult(
+                        manager.createRequestRoleIntent(RoleManager.ROLE_HOME), REQUEST_HOME);
+                    return;
+                } catch (ActivityNotFoundException | SecurityException ignored) {
+                    // Some TV firmware does not support the standard role chooser.
+                }
             }
         }
-        try{startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));}
-        catch(ActivityNotFoundException|SecurityException e){
-            toast("This TV restricts Home selection to system settings.");
+        openHomeSettings();
+    }
+
+    private void openHomeSettings() {
+        try {
+            startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+        } catch (ActivityNotFoundException | SecurityException e) {
+            toast("This TV does not expose a compatible Home selection screen");
         }
     }
 
