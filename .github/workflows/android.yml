@@ -32,6 +32,10 @@ jobs:
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+      - name: Verify packaged TV branding and least-privilege permissions
+        env:
+          ANDROID_HOME: /usr/local/lib/android/sdk
+        run: python3 .github/scripts/verify-package-privacy.py
       - name: Upload development APK
         uses: actions/upload-artifact@v4
         with:

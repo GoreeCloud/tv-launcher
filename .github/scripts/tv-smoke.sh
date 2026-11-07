@@ -47,5 +47,37 @@ FOCUS_CHECK
 adb exec-out screencap -p > "$OUT_DIR/home.png"
 adb shell pidof com.goreecloud.tvlauncher > "$OUT_DIR/pid.txt"
 test -s "$OUT_DIR/pid.txt"
+# Second resolution in the same isolated emulator (no physical TV settings changed).
+adb shell wm size 1280x720
+adb shell wm density 240
+adb shell am force-stop com.goreecloud.tvlauncher
+adb shell am start -n com.goreecloud.tvlauncher/.MainActivity
+sleep 4
+adb shell input keyevent KEYCODE_DPAD_RIGHT
+adb shell uiautomator dump /sdcard/window-goreecloud-720.xml
+adb pull /sdcard/window-goreecloud-720.xml "$OUT_DIR/window-720.xml" >/dev/null
+python3 - "$OUT_DIR/window-720.xml" <<'FOCUS_720'
+import sys
+import xml.etree.ElementTree as ET
+nodes = ET.parse(sys.argv[1]).getroot().findall('.//node')
+assert any(n.get('package') == 'com.goreecloud.tvlauncher' for n in nodes), 'App not shown at 720p'
+assert any(n.get('focusable') == 'true' and n.get('clickable') == 'true' for n in nodes), 'No actionable TV controls at 720p'
+assert any(n.get('focused') == 'true' and n.get('clickable') == 'true' for n in nodes), 'Remote focus lost at 720p'
+print('PASS: 720p UI hierarchy and actionable D-pad focus')
+FOCUS_720
+adb exec-out screencap -p > "$OUT_DIR/home-720p.png"
+python3 - "$OUT_DIR/home.png" "$OUT_DIR/home-720p.png" <<'VERIFY_PNG'
+import struct
+import sys
+from pathlib import Path
+for path, expected in zip(sys.argv[1:], [(1920, 1080), (1280, 720)]):
+    raw = Path(path).read_bytes()
+    assert raw[:8] == b'\x89PNG\r\n\x1a\n', 'Not a PNG screenshot'
+    size = struct.unpack('>II', raw[16:24])
+    assert size == expected, f'Unexpected capture size {size} for {path}'
+    print('Verified emulator screenshot', path, size)
+VERIFY_PNG
+adb shell wm size 1920x1080
+adb shell wm density 240
 adb logcat -d -t 600 -v brief > "$OUT_DIR/logcat-tail.txt"
 echo "PASS: APK installed, TV intent filters registered, activity visible, D-pad events accepted, UI hierarchy confirmed, process alive."
