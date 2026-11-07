@@ -37,6 +37,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.InputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -76,6 +77,7 @@ public final class MainActivity extends Activity {
     private EditText search;
     private TextView clock;
     private TextView featuredApp;
+    private TextView dockHeading;
     private TextView subtitle;
     private TextView countLabel;
     private View initialTile;
@@ -201,7 +203,7 @@ public final class MainActivity extends Activity {
         LinearLayout dockTitleRow = new LinearLayout(this);
         dockTitleRow.setGravity(Gravity.CENTER_VERTICAL);
         dockPanel.addView(dockTitleRow);
-        TextView dockHeading = text("FAVORITES", 12, MUTED, Typeface.BOLD);
+        dockHeading = text("QUICK LAUNCH", 12, MUTED, Typeface.BOLD);
         dockHeading.setLetterSpacing(0.14f);
         dockTitleRow.addView(dockHeading, new LinearLayout.LayoutParams(0, -2, 1));
         TextView dockHint = text("Hold OK / Menu to customize", 12, MUTED, Typeface.NORMAL);
@@ -260,13 +262,13 @@ public final class MainActivity extends Activity {
         LinearLayout.LayoutParams clearLp = new LinearLayout.LayoutParams(dp(94), dp(52));
         clearLp.leftMargin = dp(9);
         utilities.addView(clearButton, clearLp);
-        clearButton.setContentDescription("Reset to the built-in background");
+        clearButton.setContentDescription("Reset selected backdrop");
         clearButton.setOnClickListener(v -> {
             String old = prefs().getString(BACKGROUND_URI, null);
             prefs().edit().remove(BACKGROUND_URI).apply();
             if (old != null) releaseBackgroundAccess(old);
             applyBackground();
-            toast("Default backdrop restored");
+            toast("Backdrop selection reset");
         });
 
         allAppsRows = new LinearLayout(this);
@@ -338,6 +340,7 @@ public final class MainActivity extends Activity {
         List<AppEntry> pinned = new ArrayList<>();
         for (AppEntry app : apps) if (favorites.contains(app.key())) pinned.add(app);
         boolean usesSuggestions = pinned.isEmpty();
+        if (dockHeading != null) dockHeading.setText(usesSuggestions ? "QUICK LAUNCH" : "FAVORITES");
         List<AppEntry> dockApps = usesSuggestions ? apps : pinned;
         int slots = Math.min(6, dockApps.size());
         for (int i = 0; i < slots; i++) {
@@ -492,12 +495,15 @@ public final class MainActivity extends Activity {
     private void applyBackground() {
         if (backgroundImage == null) return;
         String saved = prefs().getString(BACKGROUND_URI, null);
-        if (saved == null) {
+        // The ADB-imported private file is a development-only fallback when the
+        // TV does not provide a real ACTION_OPEN_DOCUMENT picker.
+        File localImage = new File(getFilesDir(), "backdrop.jpg");
+        if (saved == null && !localImage.isFile()) {
             backgroundImage.setImageDrawable(null);
             return;
         }
         try {
-            Uri uri = Uri.parse(saved);
+            Uri uri = saved == null ? Uri.fromFile(localImage) : Uri.parse(saved);
             BitmapFactory.Options bounds = new BitmapFactory.Options();
             bounds.inJustDecodeBounds = true;
             try (InputStream input = getContentResolver().openInputStream(uri)) {
@@ -519,7 +525,7 @@ public final class MainActivity extends Activity {
             backgroundImage.setImageBitmap(bitmap);
         } catch (Exception | OutOfMemoryError ex) {
             backgroundImage.setImageDrawable(null);
-            prefs().edit().remove(BACKGROUND_URI).apply();
+            if (saved != null) prefs().edit().remove(BACKGROUND_URI).apply();
             toast("Backdrop unavailable. Using the built-in background.");
         }
     }
