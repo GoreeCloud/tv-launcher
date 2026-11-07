@@ -67,6 +67,9 @@ FOCUS_CHECK
 adb exec-out screencap -p > "$OUT_DIR/home.png"
 adb shell pidof com.goreecloud.tvlauncher > "$OUT_DIR/pid.txt"
 test -s "$OUT_DIR/pid.txt"
+# Exercises a real overfull app rail, local search and fixture launch/return.
+# Strict preflight refuses a physical TV, any USB phone or multiple ADB devices.
+python3 .github/scripts/tv-interaction-smoke.py
 # Second resolution in the same isolated emulator (no physical TV settings changed).
 adb shell wm size 1280x720
 adb shell wm density 240

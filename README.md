@@ -51,7 +51,7 @@ Requires JDK 21 and Android SDK 35:
 
 ```sh
 python3 .github/scripts/verify-asset-pin.py
-./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
 ```
 
 Output: `app/build/outputs/apk/debug/app-debug.apk` (debug-signed). CI also runs an isolated Google TV emulator smoke workflow; read the **current run conclusion** before citing it as successful.
@@ -77,6 +77,8 @@ Never expose ADB to the public Internet, disable/uninstall the original TV launc
 The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions exercises an isolated Google TV API 34 emulator at **1920×1080 and 1280×720**, checking actual screenshot dimensions and actionable D-pad focus. **No automated UHD coverage is claimed**: the hosted Google TV image ignored attempts to change its size to 3840×2160 and remained 1920×1080. A dedicated 4K-compatible device or emulator is still required for native UHD QA and founder visual acceptance. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
 
 ## Known acceptance gaps
+
+The **emulator-only** `qa-fixture` module declares twelve synthetic launchable aliases with no app permissions. Its separate APK is never shipped as the GoreeCloud product, never uploaded as a user install artifact, and must not be installed on an actual phone/TV. The smoke harness refuses any device except an isolated ADB `emulator-5554`, then exercises real D-pad movement in an overfull Your Apps rail, app search/filter/reset and launching/returning from a synthetic app. These are **emulator functional tests**, not physical-TV or Assistive Technology certification.
 
 Device-specific accessibility (TalkBack, reduced motion/high contrast), 720p/4K visual review, OEM Home chooser limitations, real personal-file picker usability, cross-device installation, long-term stability and signed release packaging are separate gates. The app is not production-certified.
 

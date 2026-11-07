@@ -1,0 +1,15 @@
+// Disposable Google TV emulator fixture, never a consumer application.
+plugins { id 'com.android.application' }
+android {
+    namespace 'com.goreecloud.tvlauncher.qafixture'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.goreecloud.tvlauncher.qafixture'
+        minSdk 23
+        targetSdk 35
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

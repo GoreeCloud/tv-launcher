@@ -5,3 +5,6 @@ dependencyResolutionManagement {
 }
 rootProject.name = 'GoreeCloudTVLauncher'
 include ':app'
+
+// Isolated emulator-only build. Never included in product APK.
+include ':qa-fixture'
