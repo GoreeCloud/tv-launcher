@@ -13,3 +13,6 @@ local.properties
 
 # Local device-only test evidence. Never publish private screenshots, prefs or APK backups.
 .qa-private/
+
+# Python source validation caches
+__pycache__/

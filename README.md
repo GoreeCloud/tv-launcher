@@ -70,6 +70,10 @@ adb -s TV_IP:DEBUGGING_PORT shell am start -n com.goreecloud.tvlauncher/.MainAct
 
 Never expose ADB to the public Internet, disable/uninstall the original TV launcher, or force a HOME role with system package disabling. The **Choose Home** button requests the system role where supported. A TV may report that this role is held while its manufacturer Home still handles the Home key. The app now checks the resolved Home activity and provides a non-destructive explanation and system Home settings option. Installing an APK or obtaining a role alone does not prove effective default routing. Debug signing certificates can differ across machines and prevent in-place updates; back up the prior build and data and assess a rollback before replacing.
 
+## Additional package and small-screen release checks
+
+The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions also exercises an isolated Google TV emulator at **1920×1080 and 1280×720**, checking screenshot dimensions and actionable D-pad focus. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
+
 ## Known acceptance gaps
 
 Device-specific accessibility (TalkBack, reduced motion/high contrast), 720p/4K visual review, OEM Home chooser limitations, real personal-file picker usability, cross-device installation, long-term stability and signed release packaging are separate gates. The app is not production-certified.

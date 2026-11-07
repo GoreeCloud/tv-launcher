@@ -29,6 +29,8 @@ jobs:
           java-version: '21'
       - name: Build debug APK
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+      - name: Verify packaged TV branding and privacy
+        run: python3 .github/scripts/verify-asset-pin.py && python3 .github/scripts/verify-package-privacy.py
       - name: Install Google TV emulator
         run: |
           set -euo pipefail
