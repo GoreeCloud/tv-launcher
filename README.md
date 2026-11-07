@@ -74,7 +74,7 @@ Never expose ADB to the public Internet, disable/uninstall the original TV launc
 
 ## Additional package and small-screen release checks
 
-The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions also exercises an isolated Google TV emulator at **3840×2160, 1920×1080 and 1280×720**, checking screenshot dimensions and actionable D-pad focus. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
+The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py) verifies APK signature, HOME/LEANBACK registration, the official icon/banner/wordmark and all four wallpapers, zero requested Android permissions, disabled backups and cleartext, and archive path safety. GitHub Actions exercises an isolated Google TV emulator at **1920×1080 and 1280×720**, plus a **requested logical 3840×2160** display-size override, checking actual screenshot dimensions, an explicit compositor-limit report and actionable D-pad focus. The Google TV emulator can accept a 4K logical override while returning a **1920×1080 hardware-compositor capture**; this is recorded rather than falsely certified as native 4K. Physical/native 4K release acceptance remains open. These automated checks are stronger evidence than source declarations alone but do not replace physical TalkBack or 4K acceptance.
 
 ## Known acceptance gaps
 

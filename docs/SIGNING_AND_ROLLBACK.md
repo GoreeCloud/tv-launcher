@@ -37,3 +37,7 @@ This script **never installs an APK**. It verifies an exact online ADB serial an
 - There is **no automatic installation** in the public workflows or the preflight script.
 - Any update needing uninstall, data deletion, role reassignment, stock Home disablement, or unreviewed certificates is blocked pending explicit authorization and a verified recovery path.
 - A passing read-only signer check is only one release gate; it is never permission to change the user's active TV session.
+
+### Emulator 4K caveat discovered November 7, 2026
+
+On isolated Google TV API 34 CI, `wm size 3840x2160` preserved a focusable `YOUR APPS` hierarchy but the headless emulator compositor still emitted a **1920×1080** screenshot. A test that demands native 4K pixels therefore fails despite successful 4K logical sizing; the automated script records both the requested virtual size and actual PNG dimensions. Do not promote this result to physical/native UHD screenshot, 4K visual, TalkBack, or founder acceptance.

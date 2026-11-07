@@ -120,17 +120,30 @@ assert any(n.get('focused') == 'true' and n.get('clickable') == 'true'
            for n in nodes), 'Actionable D-pad focus lost at UHD'
 print('PASS: 4K Your Apps identity and focused actionable control')
 FOCUS_4K
-adb exec-out screencap -p > "$OUT_DIR/home-4k.png"
-python3 - "$OUT_DIR/home-4k.png" <<'VERIFY_UHD'
+# The Google TV emulator's hardware framebuffer may remain 1920x1080
+# even when Android accepts a 3840x2160 *logical* wm override.
+# Record both dimensions; never mislabel a compositor-limited screenshot
+# as proof of native 4K pixels or physical display certification.
+adb shell wm size > "$OUT_DIR/requested-4k-mode.txt"
+grep -Fq 'Override size: 3840x2160' "$OUT_DIR/requested-4k-mode.txt"
+adb exec-out screencap -p > "$OUT_DIR/home-4k-request.png"
+python3 - "$OUT_DIR/home-4k-request.png" "$OUT_DIR/4k-capture-limits.txt" <<'VERIFY_UHD'
 import struct
 import sys
 from pathlib import Path
 data = Path(sys.argv[1]).read_bytes()
-assert data[:8] == b'\x89PNG\r\n\x1a\n', 'Invalid UHD screenshot'
-assert struct.unpack('>II', data[16:24]) == (3840, 2160), (
-    'Wrong UHD screenshot size'
+assert data[:8] == b'\x89PNG\r\n\x1a\n', 'Invalid 4K-request screenshot'
+width, height = struct.unpack('>II', data[16:24])
+assert (width, height) in ((3840, 2160), (1920, 1080)), (
+    f'Unexpected screenshot dimensions {width}x{height}'
 )
-print('PASS: actual emulator screenshot is 3840 x 2160')
+if (width, height) == (3840, 2160):
+    report = 'Native-resolution screenshot: 3840x2160; physical TV acceptance remains open'
+else:
+    report = ('LIMITATION: 3840x2160 logical window override, but Google TV emulator '
+              'compositor captured only 1920x1080; native 4K screenshot NOT verified')
+Path(sys.argv[2]).write_text(report + '\n', encoding='utf-8')
+print(report)
 VERIFY_UHD
 adb shell wm size 1920x1080
 adb shell wm density 240
