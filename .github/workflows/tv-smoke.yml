@@ -1,0 +1,54 @@
+name: Android TV emulator smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - '.github/workflows/tv-smoke.yml'
+      - '.github/scripts/tv-smoke.sh'
+      - 'gradle/**'
+      - 'build.gradle'
+      - 'app/build.gradle'
+
+permissions:
+  contents: read
+
+jobs:
+  tv-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Build debug APK
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+      - name: Install Google TV emulator
+        run: |
+          set -euo pipefail
+          SDKMGR=$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/sdkmanager' | sort -V | tail -1)
+          AVDMGR=$(find "$ANDROID_HOME/cmdline-tools" -type f -path '*/bin/avdmanager' | sort -V | tail -1)
+          test -x "$SDKMGR" && test -x "$AVDMGR"
+          "$SDKMGR" --sdk_root="$ANDROID_HOME" 'emulator' 'platform-tools' 'system-images;android-34;google-tv;x86'
+          echo no | "$AVDMGR" create avd --name GoreeCloudTvTest --package 'system-images;android-34;google-tv;x86' --force
+      - name: Boot emulator and smoke-test app
+        run: |
+          set -euo pipefail
+          export PATH="$ANDROID_HOME/platform-tools:$PATH"
+          mkdir -p tv-qa
+          if test -e /dev/kvm; then sudo chown "$(id -u)" /dev/kvm; fi
+          nohup "$ANDROID_HOME/emulator/emulator" -avd GoreeCloudTvTest -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > tv-qa/emulator.log 2>&1 &
+          bash .github/scripts/tv-smoke.sh
+      - name: Upload isolated emulator QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GoreeCloud-TV-emulator-QA
+          path: tv-qa/
+          if-no-files-found: warn
+          retention-days: 7

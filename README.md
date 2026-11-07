@@ -6,20 +6,20 @@ An original, native, D-pad-first home screen for **Android TV and Google TV**, b
 
 - Android `HOME` intent handler and Android TV `LEANBACK_LAUNCHER` entry point.
 - Display installed TV apps and compatible launchable apps; launch with remote OK.
-- Local-only app search and pinned/favorite tiles (long-press OK to toggle).
+- Local-only app search and pinned/favorite tiles (long-press OK or press Menu to toggle).
 - Current date/time, app refresh, TV settings shortcut, and user-driven Home selection.
 - D-pad focus outlines, large cards, landscape/overscan spacing and no touch requirement.
 - Zero network permission, no telemetry, ads, usage stats, sensitive accessibility services, or device-admin access.
 - Original GC UI-inspired semantic foreground, surfaces and focus states; colors are this app's design choice, not ecosystem brand defaults.
 
-**Known limits:** OEM firmware may block third-party HOME selection; Google TV manufacturer launchers can impose restrictions. The app never disables a system package, suppresses OTA updates or auto-claims the Home role. Pinned apps are local and may disappear if uninstalled. TV-specific acceptance, visual QA, TalkBack testing, and long-press behavior vary by remote and remain pending until tested on an actual TV.
+**Known limits:** OEM firmware may block third-party HOME selection; Google TV manufacturer launchers can impose restrictions. The app never disables a system package, suppresses OTA updates or auto-claims the Home role. Pinned apps are local and may disappear if uninstalled. TV-specific acceptance, visual QA, TalkBack testing, and long-press and Menu-key behavior vary by remote and remain pending until tested on an actual TV.
 
 ## Build
 
 Use JDK 21 and the Android SDK platform 35 with build tools 35+.
 
 ```sh
-./gradlew --no-daemon testDebugUnitTest assembleDebug
+./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
 ```
 
 APK: `app/build/outputs/apk/debug/app-debug.apk`. This is a debug-signed **development** build, not a stable release.

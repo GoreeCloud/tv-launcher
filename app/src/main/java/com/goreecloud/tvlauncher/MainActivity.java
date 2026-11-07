@@ -22,6 +22,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -162,7 +163,7 @@ public final class MainActivity extends Activity {
         utility.addView(defaults, new LinearLayout.LayoutParams(dp(194), dp(54)));
         defaults.setOnClickListener(v -> requestHomeRole());
 
-        LinearLayout favHeading = sectionHeading("Pinned apps", "Hold OK on an app to pin or unpin it");
+        LinearLayout favHeading = sectionHeading("Pinned apps", "Hold OK or press Menu to pin or unpin");
         LinearLayout.LayoutParams favHeadParams = new LinearLayout.LayoutParams(-1, -2);
         favHeadParams.topMargin = dp(32);
         content.addView(favHeading, favHeadParams);
@@ -172,7 +173,7 @@ public final class MainActivity extends Activity {
         favoriteParams.topMargin = dp(12);
         content.addView(favoriteRow, favoriteParams);
 
-        LinearLayout allHeading = sectionHeading("Your apps", "Launch with OK  •  Pin with a long press");
+        LinearLayout allHeading = sectionHeading("Your apps", "OK to launch  •  Hold OK / Menu to pin");
         LinearLayout.LayoutParams allParams = new LinearLayout.LayoutParams(-1, -2);
         allParams.topMargin = dp(34);
         content.addView(allHeading, allParams);
@@ -216,6 +217,8 @@ public final class MainActivity extends Activity {
 
     private void refreshApps() {
         if (appRows == null) return;
+        View active = getCurrentFocus();
+        String previouslyFocused = active == null ? null : (active.getTag() instanceof String ? (String) active.getTag() : null);
         LinkedHashMap<String, AppEntry> found = new LinkedHashMap<>();
         collectApps(found, Intent.CATEGORY_LEANBACK_LAUNCHER, true);
         collectApps(found, Intent.CATEGORY_LAUNCHER, false);
@@ -223,6 +226,7 @@ public final class MainActivity extends Activity {
         apps.addAll(found.values());
         java.util.Collections.sort(apps, (a, b) -> a.label.toLowerCase(Locale.ROOT).compareTo(b.label.toLowerCase(Locale.ROOT)));
         renderApps();
+        restoreTileFocus(previouslyFocused);
     }
 
     private void collectApps(LinkedHashMap<String, AppEntry> found, String category, boolean tv) {
@@ -306,9 +310,10 @@ public final class MainActivity extends Activity {
         tile.setPadding(dp(10), dp(12), dp(10), dp(12));
         tile.setFocusable(true);
         tile.setClickable(true);
+        tile.setTag(app.key());
         tile.setBackground(panel(false, false));
         tile.setContentDescription(app.label + (favorites.contains(app.key()) ? ", pinned" : "")
-                + ". Press OK to open; hold OK to change pin.");
+                + ". Press OK to open; hold OK or press Menu to change pin.");
         ImageView icon = new ImageView(this);
         try {
             Drawable image = getPackageManager().getActivityIcon(app.component);
@@ -332,6 +337,13 @@ public final class MainActivity extends Activity {
         focusOutline(tile, false);
         tile.setOnClickListener(v -> launch(app));
         tile.setOnLongClickListener(v -> { toggleFavorite(app); return true; });
+        tile.setOnKeyListener((v, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_MENU && event.getAction() == KeyEvent.ACTION_UP) {
+                toggleFavorite(app);
+                return true;
+            }
+            return keyCode == KeyEvent.KEYCODE_MENU;
+        });
         return tile;
     }
 
@@ -340,6 +352,23 @@ public final class MainActivity extends Activity {
         getPreferences(PREF_MODE).edit().putStringSet(FAVORITES, new HashSet<>(favorites)).apply();
         toast(favorites.contains(app.key()) ? app.label + " pinned" : app.label + " unpinned");
         renderApps();
+        restoreTileFocus(app.key());
+    }
+
+    private void restoreTileFocus(String key) {
+        if (key == null || appRows == null) return;
+        for (int rowIndex = 0; rowIndex < appRows.getChildCount(); rowIndex++) {
+            View row = appRows.getChildAt(rowIndex);
+            if (!(row instanceof ViewGroup)) continue;
+            ViewGroup group = (ViewGroup) row;
+            for (int i = 0; i < group.getChildCount(); i++) {
+                View candidate = group.getChildAt(i);
+                if (key.equals(candidate.getTag())) {
+                    candidate.requestFocus();
+                    return;
+                }
+            }
+        }
     }
 
     private void launch(AppEntry app) {
