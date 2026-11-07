@@ -26,3 +26,11 @@ The seven founder-provided TV interface examples emphasize (1) immersive edge-to
 6. Publish tested source and evidence, update relevant Drive status and Todoist, distinguish installed preview from stable release.
 
 All reference imagery stays in the founder-provided conversation; none is checked into the public repository.
+
+## Implemented v0.2.0-alpha.2
+
+Original four-wallpaper and official product identity source is maintained in [brand-assets PR #14](https://github.com/GoreeCloud/brand-assets/pull/14); Android consumer copies are checksum-pinned. The hero, wallpaper selection controls, floating D-pad dock, recent app shortcuts (not episode history), locally selected installed-app recommendations, and searchable app grid are implemented in native source. These are not claims of a real streaming/watch-position service or an independently accepted Stable release. Founder mockup pixels are not bundled.
+
+## Visual refinement / scene acceptance
+
+The four wallpaper rasters were re-rendered with richer original planetary shading and atmosphere in central brand commit `0b9a767`, merged as [brand-assets PR #14](https://github.com/GoreeCloud/brand-assets/pull/14). The launcher includes brighter hero lighting, original wallpaper-backed launch-shortcut cards with truthful Open App labels, and an installed-app-only Recommendations rail. All four scene choices were confirmed on the physical onn. TV as persisting correctly and the previous scene selection was restored. Default on a clean install remains Horizon Expedition. Do not infer actual streaming recommendations, video history or media playback.

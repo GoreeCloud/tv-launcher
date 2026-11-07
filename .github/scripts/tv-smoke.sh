@@ -32,9 +32,9 @@ adb shell input keyevent KEYCODE_DPAD_RIGHT
 adb shell input keyevent KEYCODE_DPAD_LEFT
 adb shell uiautomator dump /sdcard/window-goreecloud.xml
 adb pull /sdcard/window-goreecloud.xml "$OUT_DIR/window.xml" >/dev/null
-grep -Fq 'G O R E E C L O U D' "$OUT_DIR/window.xml"
-grep -Fq 'FAVORITES' "$OUT_DIR/window.xml"
-grep -Fq 'ALL APPS' "$OUT_DIR/window.xml"
+grep -Fq 'GoreeCloud TV' "$OUT_DIR/window.xml"
+grep -Fq 'HORIZON EXPEDITION' "$OUT_DIR/window.xml"
+grep -Fq 'QUICK LAUNCH' "$OUT_DIR/window.xml"
 python3 - "$OUT_DIR/window.xml" <<'FOCUS_CHECK'
 import sys
 import xml.etree.ElementTree as ET
