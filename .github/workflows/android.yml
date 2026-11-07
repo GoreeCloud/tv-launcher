@@ -33,7 +33,7 @@ jobs:
       - name: Test and build APK
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug
       - name: Verify packaged TV branding and least-privilege permissions
         env:
           ANDROID_HOME: /usr/local/lib/android/sdk

@@ -108,6 +108,11 @@ public final class MainActivity extends Activity {
     private View findAppsButton;
     private AppEntry focusedApp;
     private boolean receiverRegistered;
+    // Dialog button listeners fire before the modal window has disappeared.
+    // Keep the D-pad target pending until the activity regains window focus.
+    private boolean restoreSearchFocusAfterDialog;
+    private boolean searchDialogDismissed;
+    private String pendingSearchQuery;
     private final BroadcastReceiver ticker = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) { updateClock(); }
     };
@@ -141,6 +146,43 @@ public final class MainActivity extends Activity {
             receiverRegistered = false;
         }
         super.onPause();
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+        if (hasWindowFocus && restoreSearchFocusAfterDialog && root != null) {
+            root.post(this::restoreSearchFocusIfReady);
+        }
+    }
+
+    private void restoreSearchFocusIfReady() {
+        if (!restoreSearchFocusAfterDialog || !searchDialogDismissed
+            || root == null || !root.hasWindowFocus()) return;
+        restoreSearchFocusAfterDialog = false;
+        // The old dock remains attached until the modal finishes closing.
+        // Replace it only with the foreground activity window ready for D-pad.
+        appSearchQuery = pendingSearchQuery == null ? "" : pendingSearchQuery;
+        pendingSearchQuery = null;
+        renderDock();
+        final View next = firstDockTile != null ? firstDockTile : findAppsButton;
+        if (next == null) return;
+        requestTvFocus(next);
+        // Android TV can remove the previous focused tile during its layout
+        // pass. Repair only a genuinely missing focus, never steal a later
+        // user-selected focus from another control.
+        root.postDelayed(() -> {
+            if (root != null && root.hasWindowFocus() && getCurrentFocus() == null
+                && next.isAttachedToWindow()) requestTvFocus(next);
+        }, 120);
+    }
+
+    private static boolean requestTvFocus(View next) {
+        // A touch-operated search modal (or the Android emulator's input tap)
+        // leaves the view hierarchy in touch mode. Normal requestFocus()
+        // rejects TV app tiles that aren't focusableInTouchMode, even though
+        // they are D-pad focusable. Cross back to navigation mode explicitly.
+        return next.isInTouchMode() ? next.requestFocusFromTouch()
+            : next.requestFocus();
     }
 
     private SharedPreferences settings() { return getPreferences(Context.MODE_PRIVATE); }
@@ -459,6 +501,9 @@ public final class MainActivity extends Activity {
     }
 
     private void showAppSearch() {
+        restoreSearchFocusAfterDialog = false;
+        searchDialogDismissed = false;
+        pendingSearchQuery = null;
         EditText input = new EditText(this);
         input.setSingleLine(true);
         input.setTextSize(17);
@@ -470,23 +515,28 @@ public final class MainActivity extends Activity {
         LinearLayout body = vertical();
         body.setPadding(dp(20), dp(7), dp(20), dp(5));
         body.addView(input);
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
             .setTitle("Find an app")
             .setView(body)
-            .setPositiveButton("Show matches", (dialog, which) -> {
-                appSearchQuery = input.getText().toString().trim();
-                renderDock();
-                if (firstDockTile != null) firstDockTile.requestFocus();
-                else if (findAppsButton != null) findAppsButton.requestFocus();
+            .setPositiveButton("Show matches", (unused, which) -> {
+                pendingSearchQuery = input.getText().toString().trim();
+                restoreSearchFocusAfterDialog = true;
             })
-            .setNeutralButton("Show all apps", (dialog, which) -> {
-                appSearchQuery = "";
-                renderDock();
-                if (firstDockTile != null) firstDockTile.requestFocus();
-                else if (findAppsButton != null) findAppsButton.requestFocus();
+            .setNeutralButton("Show all apps", (unused, which) -> {
+                pendingSearchQuery = "";
+                restoreSearchFocusAfterDialog = true;
             })
             .setNegativeButton("Cancel", null)
-            .show();
+            .create();
+        // Dialog-dismiss and window-focus callbacks may arrive in either order;
+        // both paths are idempotent and neither runs for Cancel.
+        dialog.setOnDismissListener(unused -> {
+            searchDialogDismissed = true;
+            if (restoreSearchFocusAfterDialog && root != null) {
+                root.post(this::restoreSearchFocusIfReady);
+            }
+        });
+        dialog.show();
     }
 
     private void renderRecent() {

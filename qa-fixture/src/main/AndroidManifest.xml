@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A disposable, permission-free emulator-only fixture; do not ship this APK. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="GoreeCloud QA fixture"
+        android:allowBackup="false"
+        android:usesCleartextTraffic="false">
+        <activity android:name=".StubActivity" android:exported="false"/>
+        <activity-alias
+            android:name=".Fixture01"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 01">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture02"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 02">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture03"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 03">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture04"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 04">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture05"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 05">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture06"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 06">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture07"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 07">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture08"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 08">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture09"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 09">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture10"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 10">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture11"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 11">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".Fixture12"
+            android:targetActivity=".StubActivity"
+            android:exported="true"
+            android:label="GoreeCloud QA 12">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+            </intent-filter>
+        </activity-alias>
+    </application>
+</manifest>

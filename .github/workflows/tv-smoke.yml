@@ -5,6 +5,10 @@ on:
   pull_request:
     paths:
       - 'app/**'
+      - 'qa-fixture/**'
+      - 'settings.gradle'
+      - '.github/scripts/tv-interaction-smoke.py'
+      - '.github/scripts/tests/**'
       - '.github/workflows/tv-smoke.yml'
       - '.github/scripts/tv-smoke.sh'
       - 'gradle/**'
@@ -29,8 +33,10 @@ jobs:
           java-version: '21'
       - name: Test read-only APK update preflight safety
         run: python3 -m unittest discover -s .github/scripts/tests -v
-      - name: Build debug APK
-        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug lintDebug
+      - name: Test isolated UI-fixture parser and safety guards
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+      - name: Build debug APK and isolated local TV app fixtures
+        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug :qa-fixture:assembleDebug
       - name: Verify packaged TV branding and privacy
         run: python3 .github/scripts/verify-asset-pin.py && python3 .github/scripts/verify-package-privacy.py
       - name: Install Google TV emulator
