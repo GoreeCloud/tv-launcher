@@ -112,7 +112,10 @@ def screen(tag: str) -> list[ET.Element]:
 
 
 def tap(entries: list[ET.Element], text: str) -> None:
-    options = by_text(entries, text)
+    # Android AlertDialog buttons are rendered in all caps on some TV themes.
+    # Accessible text case must not be mistaken for a failed search control.
+    options = [item for item in entries
+               if item.get("text", "").casefold() == text.casefold()]
     require(len(options) == 1, "Expected one visible control: " + text)
     x, y = center(options[0].get("bounds", ""))
     adb("shell", "input", "tap", str(x), str(y))

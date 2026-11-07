@@ -45,6 +45,13 @@ class Parsing(unittest.TestCase):
         items = [node("Find an app"), node("12 installed"), node("YOUR APPS")]
         self.assertEqual([items[2]], script.by_text(items, "YOUR APPS"))
 
+    def test_alert_dialog_buttons_match_case_insensitively(self):
+        dialog = [node("SHOW MATCHES", "[1152,575][1350,656]")]
+        with patch.object(script, "adb", return_value=b""):
+            script.tap(dialog, "Show matches")
+            script.adb.assert_called_once_with(
+                "shell", "input", "tap", "1251", "615")
+
     def test_focused_actionable(self):
         view = node("GoreeCloud QA 12", focused="true", clickable="true",
                     **{"content-desc": "GoreeCloud QA 12. Press OK to open"})
