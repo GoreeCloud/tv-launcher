@@ -108,6 +108,10 @@ public final class MainActivity extends Activity {
     private View findAppsButton;
     private AppEntry focusedApp;
     private boolean receiverRegistered;
+    // Dialog button listeners fire before the modal window has disappeared.
+    // Keep the D-pad target pending until the activity regains window focus.
+    private boolean restoreSearchFocusAfterDialog;
+    private boolean searchDialogDismissed;
     private final BroadcastReceiver ticker = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) { updateClock(); }
     };
@@ -141,6 +145,20 @@ public final class MainActivity extends Activity {
             receiverRegistered = false;
         }
         super.onPause();
+    }
+
+    @Override public void onWindowFocusChanged(boolean hasWindowFocus) {
+        super.onWindowFocusChanged(hasWindowFocus);
+        if (hasWindowFocus && restoreSearchFocusAfterDialog && root != null) {
+            root.post(this::restoreSearchFocusIfReady);
+        }
+    }
+
+    private void restoreSearchFocusIfReady() {
+        if (!restoreSearchFocusAfterDialog || !searchDialogDismissed
+            || root == null || !root.hasWindowFocus()) return;
+        View next = firstDockTile != null ? firstDockTile : findAppsButton;
+        if (next != null && next.requestFocus()) restoreSearchFocusAfterDialog = false;
     }
 
     private SharedPreferences settings() { return getPreferences(Context.MODE_PRIVATE); }
@@ -459,6 +477,8 @@ public final class MainActivity extends Activity {
     }
 
     private void showAppSearch() {
+        restoreSearchFocusAfterDialog = false;
+        searchDialogDismissed = false;
         EditText input = new EditText(this);
         input.setSingleLine(true);
         input.setTextSize(17);
@@ -470,23 +490,30 @@ public final class MainActivity extends Activity {
         LinearLayout body = vertical();
         body.setPadding(dp(20), dp(7), dp(20), dp(5));
         body.addView(input);
-        new AlertDialog.Builder(this)
+        AlertDialog dialog = new AlertDialog.Builder(this)
             .setTitle("Find an app")
             .setView(body)
-            .setPositiveButton("Show matches", (dialog, which) -> {
+            .setPositiveButton("Show matches", (unused, which) -> {
                 appSearchQuery = input.getText().toString().trim();
                 renderDock();
-                if (firstDockTile != null) firstDockTile.requestFocus();
-                else if (findAppsButton != null) findAppsButton.requestFocus();
+                restoreSearchFocusAfterDialog = true;
             })
-            .setNeutralButton("Show all apps", (dialog, which) -> {
+            .setNeutralButton("Show all apps", (unused, which) -> {
                 appSearchQuery = "";
                 renderDock();
-                if (firstDockTile != null) firstDockTile.requestFocus();
-                else if (findAppsButton != null) findAppsButton.requestFocus();
+                restoreSearchFocusAfterDialog = true;
             })
             .setNegativeButton("Cancel", null)
-            .show();
+            .create();
+        // Dialog-dismiss and window-focus callbacks may arrive in either order;
+        // both paths are idempotent and neither runs for Cancel.
+        dialog.setOnDismissListener(unused -> {
+            searchDialogDismissed = true;
+            if (restoreSearchFocusAfterDialog && root != null) {
+                root.post(this::restoreSearchFocusIfReady);
+            }
+        });
+        dialog.show();
     }
 
     private void renderRecent() {

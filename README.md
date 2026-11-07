@@ -1,6 +1,8 @@
 # GoreeCloud TV Launcher
 
-**v0.2.0-alpha.4 · Native Android TV / Google TV · Development preview**
+**v0.2.0-alpha.5 · Native Android TV / Google TV · Development preview**
+
+The authorized onn. TV remains on v0.2.0-alpha.4. Source alpha.5 corrects an emulator-proven search-dialog D-pad focus loss; it is not installed, human-approved, or Stable.
 
 An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
@@ -78,7 +80,7 @@ The dedicated [packaged privacy check](.github/scripts/verify-package-privacy.py
 
 ## Known acceptance gaps
 
-The **emulator-only** `qa-fixture` module declares twelve synthetic launchable aliases with no app permissions. Its separate APK is never shipped as the GoreeCloud product, never uploaded as a user install artifact, and must not be installed on an actual phone/TV. The smoke harness refuses any device except an isolated ADB `emulator-5554`, then exercises real D-pad movement in an overfull Your Apps rail, app search/filter/reset and launching/returning from a synthetic app. These are **emulator functional tests**, not physical-TV or Assistive Technology certification.
+The **emulator-only** `qa-fixture` module declares twelve synthetic launchable aliases with no app permissions. Its separate APK is never shipped as the GoreeCloud product, never uploaded as a user install artifact, and must not be installed on an actual phone/TV. The smoke harness refuses any device except an isolated ADB `emulator-5554`, then exercises real D-pad movement in an overfull Your Apps rail, app search/filter/reset (including a no-match focus recovery) and launching/returning from a synthetic app. These are **emulator functional tests**, not physical-TV or Assistive Technology certification.
 
 Device-specific accessibility (TalkBack, reduced motion/high contrast), 720p/4K visual review, OEM Home chooser limitations, real personal-file picker usability, cross-device installation, long-term stability and signed release packaging are separate gates. The app is not production-certified.
 

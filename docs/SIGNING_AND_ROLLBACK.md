@@ -4,7 +4,7 @@
 
 ## Current proof and limitation
 
-- Native package: `com.goreecloud.tvlauncher`; current development preview `0.2.0-alpha.4` / versionCode 8.
+- Native package: `com.goreecloud.tvlauncher`; current development source preview 0.2.0-alpha.5 / versionCode 9. The physical TV still has 0.2.0-alpha.4 / versionCode 8 and its locally installed debug signer.
 - On the authorized onn. 4K Streaming Box, the locally installed alpha.4 APK was built using a privately held local **debug** signer. The hosted GitHub Actions debug APK from the exact merged source uses a **different debug signer**. Equal package names, code revisions and version numbers do not override Android's certificate verification.
 - Prior local APK and private preferences were backed up on the authorized laptop before a previously verified in-place alpha.4 update. These are rollback evidence, **not** an accepted release-key migration.
 - Android currently lists GoreeCloud as a Home role holder but still resolves HOME to stock Google TV. Never disable, uninstall, or alter the manufacturer launcher.

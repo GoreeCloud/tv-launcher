@@ -211,7 +211,38 @@ def test() -> None:
     restored = screen("all-apps-restored")
     require(count_installed(restored) == total,
             "Show all apps did not reset filtered Your Apps")
-    print("PASS: Show all apps resets filter; no data outside emulator changed", flush=True)
+    print("PASS: Show all apps resets filter", flush=True)
+
+    # No-result filtering must return focus to the Find an app action, not
+    # abandon the remote on an unfocusable empty-state text view.
+    tap(restored, "Find an app")
+    time.sleep(0.5)
+    no_match_dialog = screen("no-match-dialog")
+    edits = [n for n in no_match_dialog
+             if n.get("class") == "android.widget.EditText"]
+    require(len(edits) == 1, "No-match search input missing")
+    x, y = center(edits[0].get("bounds", ""))
+    adb("shell", "input", "tap", str(x), str(y))
+    adb("shell", "input", "text", "NoSuchTvApp93712")
+    no_match_dialog = screen("no-match-typed")
+    tap(no_match_dialog, "Show matches")
+    time.sleep(1.0)
+    no_matches = screen("no-matches")
+    require(match_count(no_matches) == (0, total), "No-match filter count incorrect")
+    require(by_text(no_matches,
+                    "No matching apps. Use Find an app to clear the filter."),
+            "Search empty-state guidance missing")
+    require(focused_description(no_matches) == "Find an app",
+            "No-match search did not restore actionable Find an app focus")
+    print("PASS: empty search state gives D-pad focus to Find an app", flush=True)
+    tap(no_matches, "Find an app")
+    time.sleep(0.4)
+    tap(screen("empty-reset-dialog"), "Show all apps")
+    time.sleep(0.5)
+    require(count_installed(screen("empty-restored")) == total,
+            "Failed to restore complete library from empty-state search")
+    print("PASS: empty-state reset restores every installed app", flush=True)
+    print("PASS: all integration actions occurred in disposable emulator only", flush=True)
 
 
 if __name__ == "__main__":
