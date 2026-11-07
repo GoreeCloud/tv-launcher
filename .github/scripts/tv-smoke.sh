@@ -34,7 +34,27 @@ adb shell uiautomator dump /sdcard/window-goreecloud.xml
 adb pull /sdcard/window-goreecloud.xml "$OUT_DIR/window.xml" >/dev/null
 grep -Fq 'GoreeCloud TV' "$OUT_DIR/window.xml"
 grep -Fq 'HORIZON EXPEDITION' "$OUT_DIR/window.xml"
-grep -Fq 'QUICK LAUNCH' "$OUT_DIR/window.xml"
+grep -Fq 'YOUR APPS' "$OUT_DIR/window.xml"
+python3 - "$OUT_DIR/window.xml" <<'SINGLE_APP_SECTION'
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+nodes = ET.parse(sys.argv[1]).getroot().findall('.//node')
+named = lambda name: [n for n in nodes if n.get('text') == name]
+assert len(named('YOUR APPS')) == 1, 'Expected exactly one Your Apps header'
+assert not named('FAVORITES'), 'Obsolete Favorites section returned'
+assert not named('QUICK LAUNCH'), 'Obsolete Quick Launch header returned'
+continued = named('CONTINUE IN YOUR APPS')
+if continued:
+    def top(n):
+        match = re.match(r'\[(\d+),(\d+)\]', n.get('bounds', ''))
+        return int(match.group(2)) if match else -1
+    assert top(named('YOUR APPS')[0]) < top(continued[0]), (
+        'Your Apps must be above the recent activity section'
+    )
+print('PASS: single top Your Apps section, no separate Favorites')
+SINGLE_APP_SECTION
 python3 - "$OUT_DIR/window.xml" <<'FOCUS_CHECK'
 import sys
 import xml.etree.ElementTree as ET
