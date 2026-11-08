@@ -1,7 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">GoreeCloud TV</string>
-    <string name="app_count">%1$d apps available  •  %2$d pinned</string>
-    <string name="app_hint_pin">OK to open  •  Hold OK / Menu to pin</string>
-    <string name="app_hint_unpin">OK to open  •  Hold OK / Menu to unpin</string>
 </resources>
