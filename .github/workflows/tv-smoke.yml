@@ -52,15 +52,19 @@ jobs:
           test -f "$ANDROID_AVD_HOME/GoreeCloudTvTest.ini"
           CONFIG="$ANDROID_AVD_HOME/GoreeCloudTvTest.avd/config.ini"
           test -f "$CONFIG"
-          sed -i -e '/^hw.lcd.width=/d' -e '/^hw.lcd.height=/d' -e '/^hw.lcd.density=/d' "$CONFIG"
-          printf "hw.lcd.width=1920\nhw.lcd.height=1080\nhw.lcd.density=240\n" >> "$CONFIG"
+          sed -i -e '/^hw.lcd.width=/d' -e '/^hw.lcd.height=/d' -e '/^hw.lcd.density=/d' -e '/^disk.dataPartition.size=/d' "$CONFIG"
+          # Keep disposable emulator userdata bounded. Google TV's newer
+          # defaults can request >7 GB; hosted runners sometimes have <7 GB
+          # free after SDK image setup, causing FATAL before ADB appears.
+          printf "hw.lcd.width=1920\nhw.lcd.height=1080\nhw.lcd.density=240\ndisk.dataPartition.size=4096M\n" >> "$CONFIG"
+          df -h "$ANDROID_AVD_HOME"
       - name: Boot emulator and smoke-test app
         run: |
           set -euo pipefail
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           mkdir -p tv-qa
           if test -e /dev/kvm; then sudo chown "$(id -u)" /dev/kvm; fi
-          nohup "$ANDROID_HOME/emulator/emulator" -avd GoreeCloudTvTest -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > tv-qa/emulator.log 2>&1 &
+          nohup "$ANDROID_HOME/emulator/emulator" -avd GoreeCloudTvTest -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -partition-size 4096 > tv-qa/emulator.log 2>&1 &
           bash .github/scripts/tv-smoke.sh
       - name: Upload isolated emulator QA evidence
         if: always()
