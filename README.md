@@ -43,7 +43,7 @@ The first-party branded cloud-and-TV icon, light/dark vector wordmarks, native r
 
 ## Privacy, security and capabilities
 
-The launcher requests **no Internet permission**, no package-wide visibility, usage-history or accessibility-control permissions, and no analytics. Only locally selected wallpaper, optional app ordering and recently launched app component identifiers are stored in app-private preferences; Android backup is disabled. The original Google TV Home stays installed/enabled. Firmware-specific third-party HOME selection remains user-mediated and may be blocked by an OEM.
+The launcher requests **no Internet permission**, no package-wide visibility, usage-history or accessibility-control permissions, and no analytics. Only locally selected wallpaper, optional app ordering and recently launched app component identifiers are stored in app-private preferences; Android backup is disabled, including on legacy Android versions with fullBackupContent=false. The original Google TV Home stays installed/enabled. Firmware-specific third-party HOME selection remains user-mediated and may be blocked by an OEM.
 
 **Content integrity:** There is no real media-provider account, title recommendation engine, video playback backend or TV Watch Next entitlement. Hero artwork is labeled as original scenery rather than pretend playable content; all app cards actually open installed apps. Real cross-app watch progress is not claimed.
 
