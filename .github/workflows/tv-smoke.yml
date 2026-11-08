@@ -31,9 +31,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - name: Test read-only APK update preflight safety
-        run: python3 -m unittest discover -s .github/scripts/tests -v
-      - name: Test isolated UI-fixture parser and safety guards
+      - name: Test read-only update preflight and isolated TV QA safety
         run: python3 -m unittest discover -s .github/scripts/tests -v
       - name: Build debug APK and isolated local TV app fixtures
         run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleDebug :app:lintDebug :qa-fixture:assembleDebug
