@@ -87,6 +87,20 @@ class Parsing(unittest.TestCase):
         self.assertLess(c, first_mutation)
         self.assertIn('ro.kernel.qemu', shell[:first_mutation])
 
+    def test_fixture_uninstall_scope_is_exact(self):
+        script_source = SCRIPT.read_text()
+        self.assertIn('adb("uninstall", FIXTURE, timeout=60)', script_source)
+        self.assertIn('FIXTURE = "com.goreecloud.tvlauncher.qafixture"',
+                      script_source)
+        self.assertNotIn('adb("uninstall", PACKAGE', script_source)
+        self.assertNotIn('adb("shell", "pm", "disable-user"', script_source)
+
+    def test_return_focus_and_stale_inventory_assertions_present(self):
+        source = SCRIPT.read_text()
+        self.assertIn('match_count(after_back) == (1, total)', source)
+        self.assertIn('focused_description(screen("returned-twice"))', source)
+        self.assertIn('count_installed(after_uninstall) == total - 12', source)
+
     def test_emulator_guard_checks_kernel_flag(self):
         with patch.object(script, "adb", return_value=b"0\n"), patch.object(
                 script.os, "getenv", return_value="/sdk"), patch.object(

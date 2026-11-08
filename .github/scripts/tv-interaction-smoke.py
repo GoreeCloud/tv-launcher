@@ -208,7 +208,20 @@ def test() -> None:
     after_back = screen("returned")
     require(len(by_text(after_back, "YOUR APPS")) == 1,
             "Returning from activity lost the TV launcher")
-    print("PASS: Back returns to GoreeCloud TV launcher", flush=True)
+    require(match_count(after_back) == (1, total),
+            "Returning from activity lost the active app search")
+    require("GoreeCloud QA 12" in focused_description(after_back),
+            "Returning from app lost the selected tile's D-pad focus")
+    print("PASS: Back returns to prior focused TV app tile with search intact",
+          flush=True)
+    # Exercise a second external launch to catch repeated onResume focus losses.
+    send("KEYCODE_DPAD_CENTER")
+    wait_for_fixture()
+    send("KEYCODE_BACK")
+    time.sleep(1.0)
+    require("GoreeCloud QA 12" in focused_description(screen("returned-twice")),
+            "Second app return did not restore D-pad focus")
+    print("PASS: repeated D-pad launch/Back preserves focused tile", flush=True)
     tap(after_back, "Find an app")
     time.sleep(0.5)
     dialog = screen("reset-dialog")
@@ -248,6 +261,23 @@ def test() -> None:
     require(count_installed(screen("empty-restored")) == total,
             "Failed to restore complete library from empty-state search")
     print("PASS: empty-state reset restores every installed app", flush=True)
+    # The identity guard ran before all app mutations. Delete only the
+    # disposable synthetic fixture, never a real TV app or platform package.
+    removed = adb("uninstall", FIXTURE, timeout=60)
+    require(b"Success" in removed, "Failed to remove the synthetic-only QA fixture")
+    adb("shell", "am", "force-stop", PACKAGE)
+    adb("shell", "am", "start", "-n", PACKAGE + "/.MainActivity")
+    time.sleep(2)
+    after_uninstall = screen("fixture-removed")
+    require(count_installed(after_uninstall) == total - 12,
+            "Uninstalling fixture left a stale app count in Your Apps")
+    require(not any("GoreeCloud QA" in n.get("text", "")
+                    or "GoreeCloud QA" in n.get("content-desc", "")
+                    for n in after_uninstall),
+            "Uninstalled fixture remains in launchable/recent/recommended rail")
+    require(focused_description(after_uninstall),
+            "Launcher lost focus after removing synthetic fixture")
+    print("PASS: fixture uninstall removes twelve stale app entries", flush=True)
     print("PASS: all integration actions occurred in disposable emulator only", flush=True)
 
 

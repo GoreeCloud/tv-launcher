@@ -113,6 +113,9 @@ public final class MainActivity extends Activity {
     private boolean restoreSearchFocusAfterDialog;
     private boolean searchDialogDismissed;
     private String pendingSearchQuery;
+    // The current dock is recreated on resume. Preserve the selected app
+    // identity when an external launch returns to this home activity.
+    private String pendingReturnAppKey;
     private final BroadcastReceiver ticker = new BroadcastReceiver() {
         @Override public void onReceive(Context c, Intent i) { updateClock(); }
     };
@@ -134,6 +137,9 @@ public final class MainActivity extends Activity {
         super.onResume();
         refreshApps();
         updateClock();
+        if (pendingReturnAppKey != null && root != null) {
+            root.post(this::restoreReturnFocusIfReady);
+        }
         if (!receiverRegistered) {
             registerReceiver(ticker, new IntentFilter(Intent.ACTION_TIME_TICK));
             receiverRegistered = true;
@@ -150,8 +156,27 @@ public final class MainActivity extends Activity {
 
     @Override public void onWindowFocusChanged(boolean hasWindowFocus) {
         super.onWindowFocusChanged(hasWindowFocus);
-        if (hasWindowFocus && restoreSearchFocusAfterDialog && root != null) {
-            root.post(this::restoreSearchFocusIfReady);
+        if (hasWindowFocus && root != null) {
+            if (restoreSearchFocusAfterDialog) {
+                root.post(this::restoreSearchFocusIfReady);
+            } else if (pendingReturnAppKey != null) {
+                root.post(this::restoreReturnFocusIfReady);
+            }
+        }
+    }
+
+    private void restoreReturnFocusIfReady() {
+        if (pendingReturnAppKey == null || root == null || !root.hasWindowFocus()
+            || restoreSearchFocusAfterDialog) return;
+        String key = pendingReturnAppKey;
+        pendingReturnAppKey = null;
+        // A package can disappear while a different app is open. Prefer its
+        // previous tile if still present, otherwise recover to a safe launcher
+        // control, without referencing an uninstalled or hidden component.
+        if (!findAndFocus(dock, key) && !findAndFocus(continueRow, key)
+            && !findAndFocus(recommendations, key)) {
+            View fallback = firstDockTile != null ? firstDockTile : findAppsButton;
+            if (fallback != null) requestTvFocus(fallback);
         }
     }
 
@@ -725,7 +750,7 @@ public final class MainActivity extends Activity {
         if(group==null)return false;
         for(int i=0;i<group.getChildCount();i++){
             View v=group.getChildAt(i);
-            if(key.equals(v.getTag()))return v.requestFocus();
+            if(key.equals(v.getTag()))return requestTvFocus(v);
         }
         return false;
     }
@@ -736,6 +761,7 @@ public final class MainActivity extends Activity {
                 |Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
             startActivity(intent);
+            pendingReturnAppKey = app.key();
             List<String> keys=new ArrayList<>();
             keys.add(app.key());
             for(String old:settings().getString(PREF_RECENT,"").split("\n")) {
