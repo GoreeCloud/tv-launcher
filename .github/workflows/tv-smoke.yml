@@ -26,8 +26,8 @@ jobs:
       ANDROID_HOME: /usr/local/lib/android/sdk
       ANDROID_AVD_HOME: ${{ github.workspace }}/.android/avd
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: '21'
@@ -52,19 +52,23 @@ jobs:
           test -f "$ANDROID_AVD_HOME/GoreeCloudTvTest.ini"
           CONFIG="$ANDROID_AVD_HOME/GoreeCloudTvTest.avd/config.ini"
           test -f "$CONFIG"
-          sed -i -e '/^hw.lcd.width=/d' -e '/^hw.lcd.height=/d' -e '/^hw.lcd.density=/d' "$CONFIG"
-          printf "hw.lcd.width=1920\nhw.lcd.height=1080\nhw.lcd.density=240\n" >> "$CONFIG"
+          sed -i -e '/^hw.lcd.width=/d' -e '/^hw.lcd.height=/d' -e '/^hw.lcd.density=/d' -e '/^disk.dataPartition.size=/d' "$CONFIG"
+          # Keep disposable emulator userdata bounded. Google TV's newer
+          # defaults can request >7 GB; hosted runners sometimes have <7 GB
+          # free after SDK image setup, causing FATAL before ADB appears.
+          printf "hw.lcd.width=1920\nhw.lcd.height=1080\nhw.lcd.density=240\ndisk.dataPartition.size=4096M\n" >> "$CONFIG"
+          df -h "$ANDROID_AVD_HOME"
       - name: Boot emulator and smoke-test app
         run: |
           set -euo pipefail
           export PATH="$ANDROID_HOME/platform-tools:$PATH"
           mkdir -p tv-qa
           if test -e /dev/kvm; then sudo chown "$(id -u)" /dev/kvm; fi
-          nohup "$ANDROID_HOME/emulator/emulator" -avd GoreeCloudTvTest -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect > tv-qa/emulator.log 2>&1 &
+          nohup "$ANDROID_HOME/emulator/emulator" -avd GoreeCloudTvTest -no-window -no-audio -no-boot-anim -no-snapshot -gpu swiftshader_indirect -partition-size 4096 > tv-qa/emulator.log 2>&1 &
           bash .github/scripts/tv-smoke.sh
       - name: Upload isolated emulator QA evidence
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: GoreeCloud-TV-emulator-QA
           path: tv-qa/

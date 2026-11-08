@@ -74,6 +74,13 @@ class Parsing(unittest.TestCase):
                 script.assert_disposable_emulator()
             script.adb.assert_not_called()
 
+    def test_emulator_userdata_size_is_bounded_in_ci(self):
+        workflow = (Path(__file__).resolve().parents[2]
+                    / "workflows/tv-smoke.yml").read_text()
+        self.assertIn("disk.dataPartition.size=4096M", workflow)
+        self.assertIn("-partition-size 4096", workflow)
+        self.assertIn('df -h "$ANDROID_AVD_HOME"', workflow)
+
     def test_shell_smoke_guards_device_before_first_mutation(self):
         shell = (Path(__file__).resolve().parents[1] / "tv-smoke.sh").read_text()
         a = shell.index("preconnected=$(adb devices")
