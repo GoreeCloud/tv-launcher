@@ -20,7 +20,7 @@ Record **PASS / FAIL / BLOCKED / NOT TESTED** for each case, including device fi
 | D-pad | Focus is always visible and stays on an actionable control while navigating more apps than fit on one row; scroll reaches both ends |
 | App return | Launch at least two real installed apps, return with Back and Home where appropriate, and check selected-app focus and preserved search state |
 | Search | Use the TV's actual remote/keyboard to filter to one real app, open it with OK, return, reset to all apps, and test no-match recovery |
-| Stale apps | After a controlled, authorized app install/removal (or on disposable emulator), the dock, recent shortcuts, and recommendations do not display uninstalled entries |
+| Stale apps | After a controlled, authorized app install/removal (or on disposable emulator), the dock, recent shortcuts, and recommendations update while Home remains in foreground, without losing remote focus |
 | Wallpapers | Select each of the four first-party scenes, restart the launcher and verify persistence; personal document picker works only where firmware offers an actual provider |
 | Home default | Examine both Android HOME role holder **and** actual `MAIN/HOME` intent resolution; a role grant alone is insufficient. Only use OEM-supported user-choice UI, never disable/remove stock Google TV Home; prove immediate stock fallback |
 | Return to normal | Restore the user’s original app/session, display/accessibility preferences, and stock-Home behavior. Leave debugging off after any approved QA session when appropriate |
@@ -37,4 +37,4 @@ Record **PASS / FAIL / BLOCKED / NOT TESTED** for each case, including device fi
 
 Record date, firmware, package/version, APK digest, on-device signer compatibility, test cases and their actual outcomes, visible defects, user consent/acceptance, and the verified method to return to the OEM Home app. Synchronize only verified progress with the canonical GoreeCloud Drive project records and Todoist. A failed or skipped acceptance case remains open and **blocks Stable**.
 
-**Current known boundary:** public source v0.2.0-alpha.6 is a development candidate under test; the last verified physical TV installation was v0.2.0-alpha.4, and its effective Home target was stock Google TV. No unattended installation or Home replacement is authorized by this checklist.
+**Current known boundary:** public source v0.2.0-alpha.7 is a development candidate under test; the last verified physical TV installation was v0.2.0-alpha.4, and its effective Home target was stock Google TV. No unattended installation or Home replacement is authorized by this checklist.

@@ -1,14 +1,15 @@
 # GoreeCloud TV Launcher
 
-**v0.2.0-alpha.6 · Native Android TV / Google TV · Development preview**
+**v0.2.0-alpha.7 · Native Android TV / Google TV · Development preview**
 
-The authorized onn. TV remains on v0.2.0-alpha.4. Source alpha.6 retains alpha.5's verified search-dialog focus fix and adds return-from-app focus preservation and stale-app inventory recovery; it is not installed, human-approved, or Stable.
+The authorized onn. TV remains on v0.2.0-alpha.4. Source alpha.7 retains alpha.5/alpha.6's verified search and app-return focus fixes and adds live app inventory refresh; it is not installed, human-approved, or Stable.
 
 An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
 ## Implemented home UI
 
 - **Immersive hero:** featured first-party wallpaper, GoreeCloud TV logo, clock, original world title/description, real Explore Apps and Choose Wallpaper controls, and four selectable scene indicators.
+- **Live app inventory:** system package-install, removal and change events refresh the dock, recent shortcuts and installed recommendations while the launcher is foregrounded; focus remains on the selected tile where available and moves to a safe launcher control if it disappears. No background service or new permissions are required.
 - **Your Apps at the top:** one floating translucent, horizontally scrollable dock immediately below the cinematic hero, with all installed launchable apps, colored accent gradients, high-contrast remote focus, and optional priority ordering. There is no separate Favorites section or duplicated app grid.
 - **Continue in Your Apps:** actionable recently launched app shortcuts stored only in private on-device preferences. The empty state shows launchable app shortcuts; this is explicitly **not** a fabricated Continue Watching history or episode-progress feed.
 - **GoreeCloud Worlds:** a horizontally scrollable, D-pad-operable visual rail to select one of four bundled original wallpapers.
