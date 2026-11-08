@@ -1,8 +1,8 @@
 # GoreeCloud TV Launcher
 
-**v0.2.0-alpha.5 · Native Android TV / Google TV · Development preview**
+**v0.2.0-alpha.6 · Native Android TV / Google TV · Development preview**
 
-The authorized onn. TV remains on v0.2.0-alpha.4. Source alpha.5 corrects an emulator-proven search-dialog D-pad focus loss; it is not installed, human-approved, or Stable.
+The authorized onn. TV remains on v0.2.0-alpha.4. Source alpha.6 retains alpha.5's verified search-dialog focus fix and adds return-from-app focus preservation and stale-app inventory recovery; it is not installed, human-approved, or Stable.
 
 An original, offline-first, D-pad-native launcher inspired by the founder's cinematic TV mockup. This is a source-level prototype and not an Apple TV replica, a licensed streaming service, a video player or a Stable release.
 
@@ -47,6 +47,12 @@ The launcher requests **no Internet permission**, no package-wide visibility, us
 
 **Content integrity:** There is no real media-provider account, title recommendation engine, video playback backend or TV Watch Next entitlement. Hero artwork is labeled as original scenery rather than pretend playable content; all app cards actually open installed apps. Real cross-app watch progress is not claimed.
 
+The isolated Google TV emulator QA suite also checks returning from an opened
+synthetic application twice with its D-pad focus restored and search filter
+retained, then uninstalls the 12-entry disposable fixture and confirms stale
+dock, recent, and recommended app entries vanish. These are emulator-only
+functional checks, **not** physical-TV approval.
+
 ## Build and validate
 
 Requires JDK 21 and Android SDK 35:
@@ -57,6 +63,8 @@ python3 .github/scripts/verify-asset-pin.py
 ```
 
 Output: `app/build/outputs/apk/debug/app-debug.apk` (debug-signed). CI also runs an isolated Google TV emulator smoke workflow; read the **current run conclusion** before citing it as successful.
+
+For physical release gates, use the [attended TV acceptance checklist](docs/PHYSICAL_ACCEPTANCE.md). Emulator success is not a substitute for hardware, accessibility, effective Home recovery or founder signoff.
 
 ## Wireless ADB to your own Google/Android TV
 

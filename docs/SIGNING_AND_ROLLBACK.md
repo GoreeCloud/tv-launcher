@@ -4,7 +4,7 @@
 
 ## Current proof and limitation
 
-- Native package: `com.goreecloud.tvlauncher`; current development source preview 0.2.0-alpha.5 / versionCode 9. The physical TV still has 0.2.0-alpha.4 / versionCode 8 and its locally installed debug signer.
+- Native package: `com.goreecloud.tvlauncher`; current development source preview 0.2.0-alpha.6 / versionCode 10. The physical TV still has 0.2.0-alpha.4 / versionCode 8 and its locally installed debug signer.
 - On the authorized onn. 4K Streaming Box, the locally installed alpha.4 APK was built using a privately held local **debug** signer. The hosted GitHub Actions debug APK from the exact merged source uses a **different debug signer**. Equal package names, code revisions and version numbers do not override Android's certificate verification.
 - Prior local APK and private preferences were backed up on the authorized laptop before a previously verified in-place alpha.4 update. These are rollback evidence, **not** an accepted release-key migration.
 - Android currently lists GoreeCloud as a Home role holder but still resolves HOME to stock Google TV. Never disable, uninstall, or alter the manufacturer launcher.
@@ -31,6 +31,8 @@ This script **never installs an APK**. It verifies an exact online ADB serial an
 4. Validate recoverability and data handling before any removal: enumerate the small on-device private preference set, test an explicit user-controlled data transfer or a clean-install flow, and preserve the stock Home activity as a fallback.
 5. Verify a protected release pipeline with reproducible source provenance, dependency/license inventory, static and package privacy checks, matching signer digest, SHA-256 artifact identity, and isolated Android/Google TV emulator coverage. Store each standalone deliverable `.apk` in `GoreeCloud/Artifacts` and independently read it back.
 6. On an idle, authorized physical TV with a named rollback owner and observed backup, verify navigation, apps, original wallpapers, Home and stock recovery, startup, 720p/1080p/4K behavior, scaling, TalkBack, contrast, and foreground/background lifecycle. Obtain founder visual acceptance before a Stable designation.
+
+The [attended physical-device acceptance checklist](PHYSICAL_ACCEPTANCE.md) defines the open remote, display, accessibility, OEM Home, and user signoff gates. It does not authorize an install or a launcher-role change.
 
 ## Guardrails
 
