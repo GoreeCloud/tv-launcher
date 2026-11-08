@@ -102,6 +102,16 @@ class Parsing(unittest.TestCase):
         self.assertNotIn('adb("uninstall", PACKAGE', script_source)
         self.assertNotIn('adb("shell", "pm", "disable-user"', script_source)
 
+    def test_live_package_events_do_not_force_restart_launcher(self):
+        source = SCRIPT.read_text()
+        start = source.index('removed = adb("uninstall", FIXTURE')
+        end = source.index('print("PASS: all integration actions')
+        live = source[start:end]
+        self.assertIn('wait_for_app_count(total - 12, "fixture-removed-live")', live)
+        self.assertIn('wait_for_app_count(total, "fixture-readded-live")', live)
+        self.assertNotIn('adb("shell", "am", "force-stop", PACKAGE)', live)
+        self.assertNotIn('adb("shell", "am", "start", "-n", PACKAGE', live)
+
     def test_return_focus_and_stale_inventory_assertions_present(self):
         source = SCRIPT.read_text()
         self.assertIn('match_count(after_back) == (1, total)', source)

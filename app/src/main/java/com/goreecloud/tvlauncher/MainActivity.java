@@ -108,6 +108,23 @@ public final class MainActivity extends Activity {
     private View findAppsButton;
     private AppEntry focusedApp;
     private boolean receiverRegistered;
+    private boolean packageReceiverRegistered;
+    // Debounce the multiple ADD/REMOVE/CHANGE system notifications emitted
+    // during one package operation while the Home UI remains in foreground.
+    private final Runnable refreshPackageInventory = () -> {
+        if (packageReceiverRegistered && root != null) refreshApps();
+    };
+    private final BroadcastReceiver packageReceiver = new BroadcastReceiver() {
+        @Override public void onReceive(Context c, Intent event) {
+            if (root == null || event.getData() == null) return;
+            // Ignore intermediate removal when an installed app is replaced:
+            // the following PACKAGE_ADDED will trigger a coherent refresh.
+            if (Intent.ACTION_PACKAGE_REMOVED.equals(event.getAction())
+                && event.getBooleanExtra(Intent.EXTRA_REPLACING, false)) return;
+            root.removeCallbacks(refreshPackageInventory);
+            root.postDelayed(refreshPackageInventory, 250);
+        }
+    };
     // Dialog button listeners fire before the modal window has disappeared.
     // Keep the D-pad target pending until the activity regains window focus.
     private boolean restoreSearchFocusAfterDialog;
@@ -144,9 +161,25 @@ public final class MainActivity extends Activity {
             registerReceiver(ticker, new IntentFilter(Intent.ACTION_TIME_TICK));
             receiverRegistered = true;
         }
+        if (!packageReceiverRegistered) {
+            IntentFilter changedPackages = new IntentFilter();
+            changedPackages.addAction(Intent.ACTION_PACKAGE_ADDED);
+            changedPackages.addAction(Intent.ACTION_PACKAGE_REMOVED);
+            changedPackages.addAction(Intent.ACTION_PACKAGE_CHANGED);
+            changedPackages.addDataScheme("package");
+            // These are protected OS-only broadcasts. Android 14+ explicitly
+            // exempts system-only receiver filters from the export flag rule.
+            registerReceiver(packageReceiver, changedPackages);
+            packageReceiverRegistered = true;
+        }
     }
 
     @Override protected void onPause() {
+        if (packageReceiverRegistered) {
+            packageReceiverRegistered = false;
+            unregisterReceiver(packageReceiver);
+        }
+        if (root != null) root.removeCallbacks(refreshPackageInventory);
         if (receiverRegistered) {
             unregisterReceiver(ticker);
             receiverRegistered = false;
@@ -467,7 +500,11 @@ public final class MainActivity extends Activity {
         renderDock();
         renderRecent();
         renderRecommendations();
-        if (key != null) restoreFocus(key);
+        if (key != null && !restoreFocus(key) && root != null && root.hasWindowFocus()) {
+            // Focused app was uninstalled while the user was on the dock.
+            View fallback = firstDockTile != null ? firstDockTile : findAppsButton;
+            if (fallback != null) requestTvFocus(fallback);
+        }
     }
 
     private void collect(LinkedHashMap<String, AppEntry> found, String category) {
@@ -741,10 +778,10 @@ public final class MainActivity extends Activity {
             ? " moved to the front of Your Apps" : " returned to normal ordering"));
     }
 
-    private void restoreFocus(String key) {
-        if (findAndFocus(dock,key))return;
-        if (findAndFocus(continueRow,key))return;
-        findAndFocus(recommendations,key);
+    private boolean restoreFocus(String key) {
+        return findAndFocus(dock,key)
+            || findAndFocus(continueRow,key)
+            || findAndFocus(recommendations,key);
     }
     private boolean findAndFocus(ViewGroup group,String key) {
         if(group==null)return false;

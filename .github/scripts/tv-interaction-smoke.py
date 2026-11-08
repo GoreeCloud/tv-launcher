@@ -137,6 +137,22 @@ def wait_for_fixture(timeout_seconds: int = 8) -> None:
     raise SmokeFailure("Fixture activity never became foreground")
 
 
+def wait_for_app_count(expected: int, tag: str, timeout_seconds: int = 22) -> list[ET.Element]:
+    """Wait for a live count transition, not a force-stop/restart side effect."""
+    deadline = time.monotonic() + timeout_seconds
+    attempt = 0
+    last = -1
+    while time.monotonic() < deadline:
+        current = screen(tag + "-" + str(attempt))
+        last = count_installed(current)
+        if last == expected:
+            return current
+        attempt += 1
+        time.sleep(0.5)
+    raise SmokeFailure("Live package update expected "
+                       + str(expected) + " apps, observed " + str(last))
+
+
 def test() -> None:
     assert_disposable_emulator()
     require(FIXTURE_APK.is_file(), "Fixture APK not built")
@@ -263,21 +279,30 @@ def test() -> None:
     print("PASS: empty-state reset restores every installed app", flush=True)
     # The identity guard ran before all app mutations. Delete only the
     # disposable synthetic fixture, never a real TV app or platform package.
+    # The app must update WITHOUT force-stop/relaunch; its foreground-only
+    # package broadcast receiver is the specific feature under test.
     removed = adb("uninstall", FIXTURE, timeout=60)
     require(b"Success" in removed, "Failed to remove the synthetic-only QA fixture")
-    adb("shell", "am", "force-stop", PACKAGE)
-    adb("shell", "am", "start", "-n", PACKAGE + "/.MainActivity")
-    time.sleep(2)
-    after_uninstall = screen("fixture-removed")
+    after_uninstall = wait_for_app_count(total - 12, "fixture-removed-live")
     require(count_installed(after_uninstall) == total - 12,
-            "Uninstalling fixture left a stale app count in Your Apps")
+            "Live fixture removal left a stale app count in Your Apps")
     require(not any("GoreeCloud QA" in n.get("text", "")
                     or "GoreeCloud QA" in n.get("content-desc", "")
                     for n in after_uninstall),
             "Uninstalled fixture remains in launchable/recent/recommended rail")
     require(focused_description(after_uninstall),
             "Launcher lost focus after removing synthetic fixture")
-    print("PASS: fixture uninstall removes twelve stale app entries", flush=True)
+    print("PASS: live fixture uninstall removes twelve stale app entries without restarting the launcher", flush=True)
+    reinstalled = adb("install", "-r", str(FIXTURE_APK), timeout=100)
+    require(b"Success" in reinstalled, "Failed to reinstall synthetic QA fixture")
+    after_reinstall = wait_for_app_count(total, "fixture-readded-live")
+    require(count_installed(after_reinstall) == total,
+            "Live fixture installation did not restore twelve app entries")
+    require(by_text(after_reinstall, "GoreeCloud QA 12"),
+            "Reinstalled fixture tile missing from live Your Apps dock")
+    require(focused_description(after_reinstall),
+            "Launcher lost D-pad focus after installing fixture")
+    print("PASS: live fixture install restores twelve app entries without restarting the launcher", flush=True)
     print("PASS: all integration actions occurred in disposable emulator only", flush=True)
 
 
